@@ -1,5 +1,8 @@
+#ifndef USER_MODEL
+#define USER_MODEL
+
 #include "common.h"
-#include "../utilities/libbcrypt-master/bcrypt.h"
+#include <bcrypt.h>
 
 typedef struct s_user {
     char uname[128];
@@ -7,3 +10,5 @@ typedef struct s_user {
     user_role role;
     long creation_time;
 } User;
+
+#endif // USER_MODEL

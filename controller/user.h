@@ -1,28 +1,37 @@
+#ifndef USER_CONTROLLER
+#define USER_CONTROLLER
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 #include "../model/user.h"
-#include "../utilities/libbcrypt-master/bcrypt.h"
+#include <bcrypt.h>
 
-#define USER_DB_PATH "../database/users.db"
+#define USER_DB_PATH "database/users.db"
+
+bool check_db_exists() {
+    int fd = open(USER_DB_PATH, O_RDONLY);
+    return !(fd < 0);
+}
 
 typedef enum e_login_res {
-    SUCCESS,
-    WRONGPW,
-    UNAMENOTFOUND,
-    NULLPTRERR
+    LGNSUCCESS,
+    LGNWRONGPW,
+    LGNUNAMENOTFOUND,
+    LGNNULLPTRERR
 } login_res;
 
 /// @brief user login
 /// @param uname username
 /// @param passwd password 
 /// @param udata location to store user data, must not be NULL
-/// @return 0 for SUCCESS, or corresponding error code
-login_res user_login(const char *uname = NULL, const char *passwd = NULL, User *udata = NULL) {
-    if (udata == NULL || uname == NULL || passwd == NULL) return login_res::NULLPTRERR;
+/// @return 0 for success, or corresponding error code
+login_res user_login(const char *uname, const char *passwd, User *udata) {
+    if (udata == NULL || uname == NULL || passwd == NULL) return LGNNULLPTRERR;
     int fd = open(USER_DB_PATH, O_CREAT | O_RDONLY, 0644);
-    struct flock lck {
+    struct flock lck = {
         .l_type = F_RDLCK,
         .l_whence = SEEK_SET,
         .l_start = 0,
@@ -30,19 +39,19 @@ login_res user_login(const char *uname = NULL, const char *passwd = NULL, User *
         .l_pid = getpid()
     };
     fcntl(fd, F_SETLKW, &lck);
-    login_res result = login_res::NULLPTRERR;
-    while (read(fd, udata, sizeof(User)) <= 0) {
+    login_res result = LGNNULLPTRERR;
+    while (read(fd, udata, sizeof(User)) > 0) {
         if (strcmp(udata->uname, uname) == 0) {
             if (bcrypt_checkpw(passwd, udata->pwhash) == 0)
-                result = login_res::SUCCESS;
+                result = LGNSUCCESS;
             else 
-                result = login_res::WRONGPW;
+                result = LGNWRONGPW;
             break;
         }
     }
-    if (result == login_res::NULLPTRERR) {
+    if (result == LGNNULLPTRERR) {
         udata = NULL;
-        result = login_res::UNAMENOTFOUND;
+        result = LGNUNAMENOTFOUND;
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
@@ -51,20 +60,20 @@ login_res user_login(const char *uname = NULL, const char *passwd = NULL, User *
 }
 
 typedef enum e_register_res {
-    SUCCESS,
+    REGSUCCESS,
     UNAMETAKEN,
-    NULLPTRERR
+    REGNULLPTRERR
 } register_res;
 
 /// @brief add new user to system
 /// @param uname username of new user, must be unique
 /// @param passwd password of new user
 /// @param role role of new user
-/// @return 0 for SUCCESS, or correponding error code
-register_res user_register(const char *uname = NULL, const char *passwd = NULL, user_role role = user_role::CUSTOMER) {
-    if (uname == NULL || passwd == NULL) return register_res::NULLPTRERR;
+/// @return 0 for success, or correponding error code
+register_res user_register(const char *uname, const char *passwd, user_role role) {
+    if (uname == NULL || passwd == NULL) return REGNULLPTRERR;
     int fd = open(USER_DB_PATH, O_CREAT | O_RDWR, 0644);
-    struct flock lck {
+    struct flock lck = {
         .l_type = F_RDLCK,
         .l_whence = SEEK_SET,
         .l_start = 0,
@@ -73,12 +82,12 @@ register_res user_register(const char *uname = NULL, const char *passwd = NULL, 
     };
     fcntl(fd, F_SETLKW, &lck);
     User udata;
-    while (read(fd, &udata, sizeof(User)) <= 0) {
+    while (read(fd, &udata, sizeof(User)) > 0) {
         if (strcmp(udata.uname, uname) == 0) {
             lck.l_type = F_UNLCK;
             fcntl(fd, F_SETLK, &lck);
             close(fd);
-            return register_res::UNAMETAKEN;
+            return UNAMETAKEN;
         }
     }
     strcpy(udata.uname, uname);
@@ -94,7 +103,7 @@ register_res user_register(const char *uname = NULL, const char *passwd = NULL, 
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
     close(fd);
-    return register_res::SUCCESS;
+    return REGSUCCESS;
 }
 
 #define UPDT_UNAME   0001
@@ -108,10 +117,10 @@ register_res user_register(const char *uname = NULL, const char *passwd = NULL, 
 /// @param passwd new password
 /// @param role new role
 /// @return true if uname found, false otherwise
-bool user_update(int opt = 0, const char *uname = NULL, const char *nuname, const char *passwd = NULL, user_role role = user_role::CUSTOMER) {
+bool user_update(int opt, const char *uname, const char *nuname, const char *passwd, user_role role) {
     if (uname == NULL) return false;
     int fd = open(USER_DB_PATH, O_CREAT | O_RDWR, 0644);
-    struct flock lck {
+    struct flock lck = {
         .l_type = F_RDLCK,
         .l_whence = SEEK_SET,
         .l_start = 0,
@@ -121,7 +130,7 @@ bool user_update(int opt = 0, const char *uname = NULL, const char *nuname, cons
     fcntl(fd, F_SETLKW, &lck);
     User udata;
     bool found = false;
-    while (read(fd, &udata, sizeof(User)) <= 0) {
+    while (read(fd, &udata, sizeof(User)) > 0) {
         if (strcmp(udata.uname, uname) == 0) {
             found = true;
             lck.l_type = F_WRLCK,
@@ -151,10 +160,10 @@ bool user_update(int opt = 0, const char *uname = NULL, const char *nuname, cons
 /// @brief delete user given by username and truncate database
 /// @param uname username to delete
 /// @return true if uname found, false otherwise
-bool user_delete(const char *uname = NULL) {
+bool user_delete(const char *uname) {
     if (uname == NULL) return false;
     int fd = open(USER_DB_PATH, O_CREAT | O_RDWR, 0644);
-    struct flock lck {
+    struct flock lck = {
         .l_type = F_RDLCK,
         .l_whence = SEEK_SET,
         .l_start = 0,
@@ -164,7 +173,7 @@ bool user_delete(const char *uname = NULL) {
     fcntl(fd, F_SETLKW, &lck);
     User udata;
     bool found = false;
-    while (read(fd, &udata, sizeof(User)) <= 0) {
+    while (read(fd, &udata, sizeof(User)) > 0) {
         if (strcmp(udata.uname, uname) == 0) {
             found = true;
             lck.l_type = F_WRLCK;
@@ -187,3 +196,5 @@ bool user_delete(const char *uname = NULL) {
     close(fd);
     return found;
 }
+
+#endif // USER_CONTROLLER

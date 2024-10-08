@@ -1,3 +1,6 @@
+#ifndef COMMON_MODEL
+#define COMMON_MODEL
+
 typedef enum e_user_role {
     ADMIN,
     MANAGER,
@@ -15,5 +18,6 @@ typedef struct s_pinfo {
     char street_address[128];
     char city[32];
     long zip_code;
-} pinfo;
+} PersonalInfo;
 
+#endif // COMMON_MODEL

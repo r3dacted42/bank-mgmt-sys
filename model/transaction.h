@@ -1,3 +1,6 @@
+#ifndef TRANSACTION_MODEL
+#define TRANSACTION_MODEL
+
 typedef enum e_tr_type {
     CREDIT,
     DEBIT
@@ -13,3 +16,5 @@ typedef struct s_transaction {
     int tr_date[3]; // YYYY, MM, DD
     long tr_timestp;
 } Transaction;
+
+#endif // TRANSACTION_MODEL
