@@ -6,11 +6,26 @@
 #include <time.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
-#include <ncurses.h>
+#include <ncursesw/curses.h>
+#include <ncursesw/ncurses.h>
+#include <wchar.h>
+#include <locale.h>
 
 #include "model/user.h"
 
 #define PORT 5003
+
+int mvwaddwstr(WINDOW *win, int y, int x, const wchar_t *wstr);
+void draw_border(WINDOW *win, int wy, int wx) {
+    for(int i = 1; i < wy - 1; i++) mvwaddwstr(win, i, 0, L"║");
+    for(int i = 1; i < wy - 1; i++) mvwaddwstr(win, i, wx-1, L"║");
+    for(int i = 1; i < wx - 1; i++) mvwaddwstr(win, 0, i, L"═");
+    for(int i = 1; i < wx - 1; i++) mvwaddwstr(win, wy - 1, i, L"═");
+    mvwaddwstr(win, 0, 0, L"╔");
+    mvwaddwstr(win, 0, wx - 1, L"╗");
+    mvwaddwstr(win, wy - 1, 0, L"╚");
+    mvwaddwstr(win, wy - 1, wx - 1, L"╝");
+}
 
 int main() {
     // struct sockaddr_in serv;
@@ -30,20 +45,26 @@ int main() {
     //     return -1;
     // }
     
+    setlocale(LC_ALL, "");
     initscr();
-    start_color();
-    attron(COLOR_PAIR(1));
 	WINDOW *win = newwin(LINES, COLS, 0, 0);
-    // wborder(win, 186, 186, 205, 205, 201, 187, 200, 188);
-    box(win, 0, 0);
-    init_pair(1, COLOR_RED, COLOR_WHITE);
+    draw_border(win, LINES, COLS);
+    // box(win, 0, 0);
     mvwprintw(win, 0, COLS / 2 - 13, " BANK MANAGEMENT SYSTEM ");
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_RED, COLOR_BLACK);
+        attron(COLOR_PAIR(1));
+        mvwprintw(win, 1, 1, "has colors, just hates you");
+        attroff(COLOR_PAIR(1));
+    }
     wrefresh(win);
-    int ch = wgetch(win);
-    attroff(COLOR_PAIR(1));
+    wgetch(win);
     delwin(win);
 	endwin();
 
     // close(sfd);
     return 0;
 }
+
+// https://linux.die.net/man/3/mvwaddwstr
