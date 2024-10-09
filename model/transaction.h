@@ -7,12 +7,11 @@ typedef enum e_tr_type {
 } tr_type;
 
 typedef struct s_transaction {
-    long cuid;
-    long trid;
+    char uname[128];
     tr_type type;
-    long other_cuid;
+    char other_uname[128];
     long amount;
-    long tr_time[3]; // HH, MM, SS
+    int tr_time[3]; // HH, MM, SS
     int tr_date[3]; // YYYY, MM, DD
     long tr_timestp;
 } Transaction;

@@ -6,23 +6,15 @@
 #include "user.h"
 
 typedef enum e_res_type {
-    RESLOGIN,
-    RESREGISTER,
-    RESUPDATEUSER,
-    RESDELETEUSER,
+    RESSUCCESS,
     RESBADREQ,
     RESUNAUTH,
     RESSERVERR
 } res_type;
 
-typedef struct s_res_login_data {
-    char uname[128];
-    user_role role;
-} res_login_data;
-
 typedef union u_res_data
 {
-    res_login_data login;
+    user_role login;
 } res_data;
 
 typedef struct s_response {

@@ -9,14 +9,10 @@ typedef enum e_acc_state {
 } acc_state;
 
 typedef struct s_customer {
-    long uid;
-    long cuid;
+    char uname[128];
     acc_state state;
     PersonalInfo pers_info;
-    long acc_number;
-    long acc_balance;
-    long acc_created_at;
-    long update_time;
+    long balance;
 } Customer;
 
 #endif // CUSTOMER_MODEL

@@ -11,9 +11,11 @@
 
 #define USER_DB_PATH "database/users.db"
 
-bool check_db_exists() {
+int get_user_count() {
     int fd = open(USER_DB_PATH, O_RDONLY);
-    return !(fd < 0);
+    int sz = lseek(fd, 0, SEEK_END);
+    close(fd);
+    return (sz / sizeof(User));
 }
 
 typedef enum e_login_res {
