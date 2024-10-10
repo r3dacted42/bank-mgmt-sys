@@ -78,6 +78,10 @@ void thread_cleanup(void *arg) {
     close(args.cfd);
 }
 
+void sigpipe_handler(int sig) {
+    // printf("got SIGPIPE, client exited without closing pipe :(\n");
+}
+
 void* service(void *arg) {
     struct thread_args args;
     memcpy(&args, (struct thread_args*)(arg), sizeof(struct thread_args));
@@ -90,86 +94,165 @@ void* service(void *arg) {
     };
     pthread_cleanup_push(thread_cleanup, (void*)&cargs);
     User current_user;
-    Request *req = malloc(sizeof(Request));
-    Response *res;
-    read(cfd, req, sizeof(Request));
-    if (!(req->type == REQLOGIN)) {
-        res = malloc(sizeof(Response));
-        res->type = RESBADREQ;
-        write(cfd, res, sizeof(Response));
-        free(req);
-        free(res);
+    Request req;
+    Response res;
+    read(cfd, &req, sizeof(Request));
+    if (!(req.type == REQLOGIN)) {
+        res.type = RESBADREQ;
+        write(cfd, &res, sizeof(Response));
         printf("exiting thread for request #%d\n", args.num_requests);
         return NULL;
     }
-    login_res lres = user_login(req->data.login.uname, req->data.login.pw, &current_user);
-    free(req);
+    login_res lres = user_login(req.data.login.uname, req.data.login.pw, &current_user);
     if (lres == LGNSUCCESS) {
         close_user(&current_user);
         mark_user(*args.th, &current_user);
-        res = malloc(sizeof(Response));
-        res->type = RESSUCCESS;
-        res->data.login = current_user.role;
-        printf("[%d] role of user: %d\n", args.num_requests, res->data.login);
-        write(cfd, res, sizeof(Response));
-        free(res);
+        res.type = RESSUCCESS;
+        res.data.login = current_user.role;
+        printf("[%d] role of user: %d\n", args.num_requests, res.data.login);
+        write(cfd, &res, sizeof(Response));
         printf("[%d] user %s logged in\n", args.num_requests, current_user.uname);
     } else {
-        res = malloc(sizeof(Response));
-        res->type = RESUNAUTH;
-        write(cfd, res, sizeof(Response));
-        free(res);
+        res.type = RESUNAUTH;
+        write(cfd, &res, sizeof(Response));
         printf("exiting thread for request #%d\n", args.num_requests);
         return NULL;
     }
     while (1) {
-        req = malloc(sizeof(Request));
-        read(cfd, req, sizeof(Request));
-        if (req->type == REQLOGOUT) {
+        read(cfd, &req, sizeof(Request));
+        if (req.type == REQLOGOUT) {
             printf("[%d] user %s logged out\n", args.num_requests, current_user.uname);
             unmark_user(&current_user);
             break;
         }
-        if (req->type == REQCHPW) {
+        if (req.type == REQCHPW) {
             printf("[%d] user %s trying to change passwd\n", args.num_requests, current_user.uname);
             User tmp;
-            res = malloc(sizeof(Response));
-            if (user_login(current_user.uname, req->data.chpw.oldpw, &tmp) == LGNSUCCESS
-                && user_update(UPDT_PASSWD, current_user.uname, NULL, req->data.chpw.newpw, current_user.role)) {
-                res->type = RESSUCCESS;
-            } else res->type = RESBADREQ;
-            write(cfd, res, sizeof(Response));
-            free(res);
+            if (user_login(current_user.uname, req.data.chpw.oldpw, &tmp) == LGNSUCCESS
+                && user_update(UPDT_PASSWD, current_user.uname, NULL, req.data.chpw.newpw, current_user.role)) {
+                res.type = RESSUCCESS;
+            } else res.type = RESBADREQ;
         }
-        if (req->type == REQREGISTER) {
+        if (req.type == REQREGISTER) {
             printf("[%d] user %s trying to create user\n", args.num_requests, current_user.uname);
-            res = malloc(sizeof(Response));
-            if (current_user.role == ADMIN || req->data.uregupdt.role < current_user.role) {
-                if (user_register(req->data.uregupdt.uname, req->data.uregupdt.pw, req->data.uregupdt.role) == REGSUCCESS) {
-                    if (req->data.uregupdt.role != ADMIN) {
-                        if (req->data.uregupdt.role == CUSTOMER) {
+            if (current_user.role == ADMIN || req.data.ureg.role > current_user.role) {
+                if (user_register(req.data.ureg.uname, req.data.ureg.pw, req.data.ureg.role) == REGSUCCESS) {
+                    if (req.data.ureg.role != ADMIN) {
+                        if (req.data.ureg.role == CUSTOMER) {
                             Customer cust = {
                                 .balance = 0,
                                 .state = INACTIVE,
-                                .pers_info = req->data.uregupdt.info
+                                .pers_info = req.data.ureg.info
                             };
-                            strcpy(cust.uname, req->data.uregupdt.uname);
+                            strcpy(cust.uname, req.data.ureg.uname);
                             cust_create(&cust);
                         } else {
                             Employee emp = {
-                                .pers_info = req->data.uregupdt.info
+                                .pers_info = req.data.ureg.info
                             };
-                            strcpy(emp.uname, req->data.uregupdt.uname);
+                            strcpy(emp.uname, req.data.ureg.uname);
                             emp_create(&emp);
                         }
                     }
-                    res->type = RESSUCCESS;
-                } else res->type = RESBADREQ;
-            } else res->type = RESUNAUTH;
-            write(cfd, res, sizeof(Response));
-            free(res);
+                    res.type = RESSUCCESS;
+                } else res.type = RESBADREQ;
+            } else res.type = RESUNAUTH;
         }
-        free(req);
+        if (req.type == REQGETUSR) {
+            printf("[%d] user %s trying to get data of (%s)\n", args.num_requests, current_user.uname, req.data.getusr);
+            User temp;
+            if (user_read(req.data.getusr, &temp)) {
+                res.data.getusr.role = temp.role;
+                res.type = RESSUCCESS;
+                if (temp.role == CUSTOMER) {
+                    Customer ctemp;
+                    if (cust_read(req.data.getusr, &ctemp)) {
+                        printf("found customer data\n");
+                    }
+                    memcpy(res.data.getusr.info.first_name, ctemp.pers_info.first_name, sizeof(PersonalInfo));
+                    printf("read %s, copied %s\n", ctemp.pers_info.last_name, res.data.getusr.info.last_name);
+                    res.data.getusr.cust_state = ctemp.state;
+                    res.data.getusr.cust_balance = ctemp.balance;
+                } else if (temp.role == EMPLOYEE || temp.role == MANAGER) {
+                    Employee etemp;
+                    emp_read(req.data.getusr, &etemp);
+                    memcpy(&res.data.getusr.info, &etemp.pers_info, sizeof(PersonalInfo));
+                } else if (temp.role == ADMIN) {
+                    res.type = RESUNAUTH;
+                }
+            } else res.type = RESBADREQ;
+        }
+        if (req.type == REQUPDTUSR) {
+            printf("[%d] user %s trying to update (%s)\n", args.num_requests, current_user.uname, req.data.uupdt.uname);
+            User utemp;
+            if (!user_read(req.data.uupdt.uname, &utemp)) res.type = RESBADREQ;
+            else if (current_user.role < utemp.role) {
+                int uopt = 0;
+                if (strcmp(req.data.uupdt.nuname, utemp.uname)) uopt = UPDT_UNAME;
+                if (req.data.uupdt.pw[0] != 0) uopt |= UPDT_PASSWD;
+                if (req.data.uupdt.role != utemp.role) uopt |= UPDT_ROLE;
+                printf("update opt: %d\n", uopt);
+                user_update(uopt, utemp.uname, req.data.uupdt.nuname, req.data.uupdt.pw, req.data.uupdt.role);
+                if (uopt & UPDT_ROLE) {
+                    if (utemp.role == EMPLOYEE || utemp.role == MANAGER) 
+                        emp_delete(utemp.uname);
+                    if (utemp.role == CUSTOMER)
+                        cust_delete(utemp.uname);
+                    if (req.data.uupdt.role == EMPLOYEE || req.data.uupdt.role == MANAGER) {
+                        Employee em = {
+                            .pers_info = req.data.uupdt.info
+                        };
+                        if (uopt & UPDT_UNAME) strcpy(em.uname, req.data.uupdt.nuname);
+                        else strcpy(em.uname, utemp.uname);
+                        emp_create(&em);
+                    }
+                    if (req.data.uupdt.role == CUSTOMER) {
+                        Customer cu = {
+                            .balance = 0,
+                            .pers_info = req.data.uupdt.info,
+                            .state = INACTIVE
+                        };
+                        if (uopt & UPDT_UNAME) strcpy(cu.uname, req.data.uupdt.nuname);
+                        else strcpy(cu.uname, utemp.uname);
+                        cust_create(&cu);
+                    }
+                } else {
+                    if (utemp.role == MANAGER || utemp.role == EMPLOYEE) {
+                        Employee em = {
+                            .pers_info = req.data.uupdt.info
+                        };
+                        if (uopt & UPDT_UNAME) strcpy(em.uname, req.data.uupdt.nuname);
+                        else strcpy(em.uname, utemp.uname);
+                        emp_update(utemp.uname, &em);
+                    }
+                    if (utemp.role == CUSTOMER) {
+                        Customer cu = {
+                            .balance = req.data.uupdt.cust_balance,
+                            .state = req.data.uupdt.cust_state,
+                            .pers_info = req.data.uupdt.info
+                        };
+                        if (uopt & UPDT_UNAME) strcpy(cu.uname, req.data.uupdt.nuname);
+                        else strcpy(cu.uname, utemp.uname);
+                        cust_update(utemp.uname, &cu);
+                    }
+                }
+                res.type = RESSUCCESS;
+            } else res.type = RESUNAUTH;
+        }
+        if (req.type == REQDLTUSR) {
+            printf("[%d] user %s is trying to delete (%s)\n", args.num_requests, current_user.uname, req.data.udlt);
+            User utmp;
+            if (!user_read(req.data.udlt, &utmp)) {
+                res.type = RESBADREQ;
+            } else if (current_user.role < utmp.role) {
+                user_delete(utmp.uname);
+                if (utmp.role == EMPLOYEE || utmp.role == MANAGER) emp_delete(utmp.uname);
+                else cust_delete(utmp.uname);
+                res.type = RESSUCCESS;
+            } else res.type = RESUNAUTH;
+        }
+        write(cfd, &res, sizeof(Response));
+        memset(&res, 0, sizeof(Response));
     }
     printf("exiting thread for request #%d\n", args.num_requests);
     close(cfd);
@@ -181,7 +264,7 @@ int main() {
     int num_users = get_user_count();
     if (num_users <= 0) {
         printf("please create an admin account to continue:\nenter the username: ");
-        char uname[128], pw[128];
+        char uname[UN_LEN], pw[PW_LEN];
         scanf("%s", uname);
         printf("enter the password: ");
         scanf("%s", pw);
@@ -220,6 +303,7 @@ int main() {
     }
     printf("listening at port %d...\n", PORT);
     signal(SIGINT, close_sock);
+    signal(SIGPIPE, sigpipe_handler);
     int num_requests = 0;
     socklen_t clisize = sizeof(cli);
 
@@ -237,7 +321,8 @@ int main() {
         pthread_create(args->th, NULL, service, (void *)(args));
     }
 
-    return 0;
+    printf("control shouldn't reach here!!!!\n");
+    return -1;
 }
 
 void close_sock(int s) {

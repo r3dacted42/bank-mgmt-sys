@@ -122,7 +122,7 @@ void personal_info_window(WINDOW *win, PersonalInfo *pinfo) {
     }
     keypad(win, FALSE);
     mvwscanw(win, fy + 1, fx + 1, "%s", pinfo->city);
-    mvwscanw(win, fy + dfy + 1, fx + 1, "%ld", &pinfo->zip_code);
+    mvwscanw(win, fy + dfy + 1, fx + 1, "%s", pinfo->zip_code);
     usw_update_message(win, "Creating user...");
 }
 

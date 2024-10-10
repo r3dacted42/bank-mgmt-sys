@@ -2,6 +2,7 @@
 #define USER_CONTROLLER
 
 #include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
@@ -12,10 +13,35 @@
 #define USER_DB_PATH "database/users.db"
 
 int get_user_count() {
-    int fd = open(USER_DB_PATH, O_RDONLY);
+    int fd = open(USER_DB_PATH, O_CREAT | O_RDONLY, 0644);
+    if (fd < 0) return 0;
     int sz = lseek(fd, 0, SEEK_END);
     close(fd);
     return (sz / sizeof(User));
+}
+
+bool user_read(const char *uname, User *udata) {
+    int fd = open(USER_DB_PATH, O_CREAT | O_RDONLY, 0644);
+    struct flock lck = {
+        .l_type = F_RDLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0,
+        .l_len = 0,
+        .l_pid = getpid()
+    };
+    fcntl(fd, F_SETLKW, &lck);
+    bool found = false;
+    while (read(fd, udata, sizeof(User)) > 0) {
+        if (strcmp(udata->uname, uname) == 0) {
+            found = true;
+            break;
+        }
+    }
+    lck.l_type = F_UNLCK;
+    fcntl(fd, F_SETLK, &lck);
+    close(fd);
+    if (!found) udata = NULL;
+    return found;
 }
 
 typedef enum e_login_res {
@@ -175,6 +201,8 @@ bool user_delete(const char *uname) {
     fcntl(fd, F_SETLKW, &lck);
     User udata;
     bool found = false;
+    // printf("trying to delete %s\n", uname);
+    int uidx = 0;
     while (read(fd, &udata, sizeof(User)) > 0) {
         if (strcmp(udata.uname, uname) == 0) {
             found = true;
@@ -182,16 +210,20 @@ bool user_delete(const char *uname) {
             fcntl(fd, F_SETLKW, &lck);
             int fd2 = dup(fd);
             int new_size = lseek(fd2, -1 * sizeof(User), SEEK_END);
+            // printf("new size stores %ld users\n", new_size / sizeof(User));
             User last_udata;
             read(fd2, &last_udata, sizeof(User));
+            // printf("read last_udata: %s\n", last_udata.uname);
             close(fd2);
             if (strcmp(udata.uname, last_udata.uname)) {
-                lseek(fd, -1 * sizeof(User), SEEK_CUR);
+                lseek(fd, uidx * sizeof(User), SEEK_SET);
+                // printf("fd will overwrite user %ld\n", lseek(fd, 0, SEEK_CUR) / sizeof(User));
                 write(fd, &last_udata, sizeof(User));
             }
             ftruncate(fd, new_size);
             break;
         }
+        uidx++;
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);

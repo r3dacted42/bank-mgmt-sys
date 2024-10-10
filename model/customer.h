@@ -9,7 +9,7 @@ typedef enum e_acc_state {
 } acc_state;
 
 typedef struct s_customer {
-    char uname[128];
+    char uname[UN_LEN];
     acc_state state;
     PersonalInfo pers_info;
     long balance;

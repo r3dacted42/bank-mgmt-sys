@@ -79,7 +79,6 @@ bool emp_update(const char *uname, const Employee *emdata) {
             lck.l_start = lseek(fd, -1 * sizeof(Employee), SEEK_CUR),
             lck.l_len = sizeof(Employee);
             fcntl(fd, F_SETLKW, &lck);
-            lseek(fd, 0, SEEK_END);
             write(fd, emdata, sizeof(Employee));
             lck.l_type = F_UNLCK;
             fcntl(fd, F_SETLK, &lck);
@@ -106,6 +105,7 @@ bool emp_delete(const char *uname) {
     fcntl(fd, F_SETLKW, &lck);
     Employee emdata;
     bool found = false;
+    int eidx = 0;
     while (read(fd, &emdata, sizeof(Employee)) > 0) {
         if (strcmp(emdata.uname, uname) == 0) {
             found = true;
@@ -117,12 +117,13 @@ bool emp_delete(const char *uname) {
             read(fd2, &last_emdata, sizeof(Employee));
             close(fd2);
             if (strcmp(emdata.uname, last_emdata.uname)) {
-                lseek(fd, -1 * sizeof(Employee), SEEK_CUR);
+                lseek(fd, eidx * sizeof(Employee), SEEK_SET);
                 write(fd, &last_emdata, sizeof(Employee));
             }
             ftruncate(fd, new_size);
             break;
         }
+        eidx++;
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);

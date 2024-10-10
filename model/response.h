@@ -12,9 +12,17 @@ typedef enum e_res_type {
     RESSERVERR
 } res_type;
 
+typedef struct s_get_usr_data {
+    user_role role;
+    PersonalInfo info;
+    acc_state cust_state;
+    long cust_balance;
+} get_usr_data;
+
 typedef union u_res_data
 {
     user_role login;
+    get_usr_data getusr;
 } res_data;
 
 typedef struct s_response {

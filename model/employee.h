@@ -4,7 +4,7 @@
 #include "common.h"
 
 typedef struct s_employee {
-    char uname[128];
+    char uname[UN_LEN];
     PersonalInfo pers_info;
 } Employee;
 

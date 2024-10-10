@@ -11,6 +11,7 @@
 #include <ncursesw/ncurses.h>
 #include <locale.h>
 #include <stdbool.h>
+#include <signal.h>
 
 #include "model/user.h"
 #include "utilities/borders.h"
@@ -29,9 +30,24 @@ void remove_window(WINDOW *win) {
 
 #define debug_text(FORMAT...) mvwprintw(win, 1, 1, FORMAT)
 
+WINDOW *win;
+int sfd;
+
+void graceful_exit(int sig) {
+    if (sig != SIGINT) return;
+    Request req;
+    req.type = REQLOGOUT;
+    write(sfd, &req, sizeof(Request));
+    delwin(win);
+	endwin();
+    shutdown(sfd, SHUT_RDWR);
+    close(sfd);
+    exit(0);
+}
+
 int main() {
     struct sockaddr_in serv;
-    int sfd = socket(AF_INET, SOCK_STREAM, 0);
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd < 0) {
         perror("failed while opening socket");
         return -1;
@@ -49,12 +65,12 @@ int main() {
     
     setlocale(LC_ALL, "");
     initscr();
-    cbreak();
-	WINDOW *win = newwin(LINES, COLS, 0, 0);
+	win = newwin(LINES, COLS, 0, 0);
+    signal(SIGINT, graceful_exit);
     draw_double_border(win, LINES, COLS);
     mvwprintw(win, 0, COLS / 2 - 13, " BANK MANAGEMENT SYSTEM ");
     wrefresh(win);
-    char uname[128], passwd[128];
+    char uname[UN_LEN], passwd[PW_LEN];
     WINDOW *lwin = login_window(uname, passwd);
     
     Request *req = malloc(sizeof(Request));
@@ -96,8 +112,7 @@ int main() {
     wgetch(win);
     delwin(win);
 	endwin();
+    shutdown(sfd, SHUT_RDWR);
     close(sfd);
     return 0;
 }
-
-// https://linux.die.net/man/3/mvwaddwstr

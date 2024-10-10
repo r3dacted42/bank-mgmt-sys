@@ -9,14 +9,14 @@ typedef enum e_user_role {
 } user_role;
 
 typedef struct s_pinfo {
-    char first_name[64];
-    char last_name[64];
+    char first_name[16];
+    char last_name[16];
     char email[64];
-    char phone[12];
-    char dob[10]; // YYYY/MM/DD
+    char phone[13];
+    char dob[11]; // YYYY/MM/DD
     char gender;
     char city[32];
-    long zip_code;
+    char zip_code[7];
 } PersonalInfo;
 
 #endif // COMMON_MODEL
