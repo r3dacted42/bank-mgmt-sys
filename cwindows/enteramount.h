@@ -26,8 +26,9 @@ WINDOW* enter_amount_window(float *amt, bool deposit) {
     mvwprintw(eamt, 0, w / 2 - 8, " ENTER AMOUNT ");
     mvwprintw(eamt, h / 2, 4, "Amount: ");
     wrectangle(eamt, h / 2 - 1, 18, h / 2 + 1, w - 5);
+    mvwprintw(eamt, h / 2, 19, "₹");
     wrefresh(eamt);
-    mvwscanw(eamt, h / 2, 19, "%f", amt);
+    mvwscanw(eamt, h / 2, 21, "%f", amt);
     eamt_update_message(eamt, deposit ? "Depositing..." : "Withdrawing...");
     return eamt;
 }
