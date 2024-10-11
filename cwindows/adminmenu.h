@@ -25,7 +25,7 @@ void admin_menu_window(int sfd) {
     while (1) {
         for (int i = 0; i < num_options; i++) {
             if (highlight_idx == i) wattron(awin, A_REVERSE);
-            mvwprintw(awin, h / 2 - (2 - i) * 2, w / 2 - strlen(options[i]) / 2, "%s", options[i]);
+            mvwprintw(awin, h / 2 - (num_options / 2 - i) * 2, w / 2 - strlen(options[i]) / 2, "%s", options[i]);
             if (highlight_idx == i) wattroff(awin, A_REVERSE);
         }
         wrefresh(awin);

@@ -29,8 +29,8 @@ WINDOW* create_user_window(char *uname, char *passwd, user_role *role) {
     wrectangle(cusrwin, fy - dfy, fx, fy + fh - dfy, fx + fw);
     wrectangle(cusrwin, fy, fx, fy + fh, fx + fw);
     wrectangle(cusrwin, fy + dfy, fx, fy + fh + dfy, fx + fw);
-    mvwprintw(cusrwin, fy + dfy + 1, fx + 1, "<");
-    mvwprintw(cusrwin, fy + dfy + 1, fx + fw - 1, ">");
+    mvwprintw(cusrwin, fy + dfy + 1, fx + 1, ARROW_LEFT);
+    mvwprintw(cusrwin, fy + dfy + 1, fx + fw - 1, ARROW_RIGHT);
     mvwprintw(cusrwin, fy + dfy + 1, fx + fw / 2 - 4, "Customer");
     wrefresh(cusrwin);
     mvwscanw(cusrwin, fy - dfy + 1, fx + 1, "%s", uname);
@@ -96,8 +96,8 @@ void personal_info_window(WINDOW *win, PersonalInfo *pinfo) {
     wrectangle(win, fy - dfy, fx, fy + fh - dfy, fx + fw);
     wrectangle(win, fy, fx, fy + fh, fx + fw);
     wrectangle(win, fy + dfy, fx, fy + fh + dfy, fx + fw);
-    mvwprintw(win, fy - dfy + 1, fx + 1, "<");
-    mvwprintw(win, fy - dfy + 1, fx + fw - 1, ">");
+    mvwprintw(win, fy - dfy + 1, fx + 1, ARROW_LEFT);
+    mvwprintw(win, fy - dfy + 1, fx + fw - 1, ARROW_RIGHT);
     mvwprintw(win, fy - dfy + 1, fx + fw / 2 - 4, "Female");
     pinfo->gender = 'F';
     keypad(win, TRUE);

@@ -70,9 +70,9 @@ bool view_edit_user_window(req_uupdt_data *udata) {
         hilt(1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->pw); unlt(1);
         roletostr(udata->role, rolestr);
         mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", eraser);
-        mvwprintw(uvewin, fy + dfy + 1, fx + 1, "<");
-        mvwprintw(uvewin, fy + dfy + 1, fx + fw - 1, ">");
-        hilt(2); mvwprintw(uvewin, fy + dfy + 1, fx + 3, "%s", rolestr); unlt(2);
+        mvwprintw(uvewin, fy + dfy + 1, fx + 1, ARROW_LEFT);
+        mvwprintw(uvewin, fy + dfy + 1, fx + fw - 1, ARROW_RIGHT);
+        hilt(2); mvwprintw(uvewin, fy + dfy + 1, fx + fw / 2 - strlen(rolestr) / 2, "%s", rolestr); unlt(2);
         hilt(3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(3);
         hilt(4); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[N] NEXT"); unlt(4);
         wrefresh(uvewin);
@@ -197,9 +197,9 @@ bool view_edit_user_window(req_uupdt_data *udata) {
     while (1) {
         itogtxt(gidx, genderstr);
         mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", eraser);
-        mvwprintw(uvewin, fy - dfy + 1, fx + 1, "<");
-        mvwprintw(uvewin, fy - dfy + 1, fx + fw - 1, ">");
-        hilt(0); mvwprintw(uvewin, fy - dfy + 1, fx + 3, "%s", genderstr); unlt(0);
+        mvwprintw(uvewin, fy - dfy + 1, fx + 1, ARROW_LEFT);
+        mvwprintw(uvewin, fy - dfy + 1, fx + fw - 1, ARROW_RIGHT);
+        hilt(0); mvwprintw(uvewin, fy - dfy + 1, fx + fw / 2 - strlen(genderstr) / 2, "%s", genderstr); unlt(0);
         hilt(1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->info.city); unlt(1);
         hilt(2); mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", udata->info.zip_code); unlt(2);
         hilt(3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(3);

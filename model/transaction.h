@@ -13,9 +13,7 @@ typedef struct s_transaction {
     tr_type type;
     char other_uname[UN_LEN];
     long amount;
-    int tr_time[3]; // HH, MM, SS
-    int tr_date[3]; // YYYY, MM, DD
-    long tr_timestp;
+    long timestp;
 } Transaction;
 
 #endif // TRANSACTION_MODEL

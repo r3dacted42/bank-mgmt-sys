@@ -1,8 +1,6 @@
 #ifndef RESPONSE_MODEL
 #define RESPONSE_MODEL
 
-#include <stdlib.h>
-#include <string.h>
 #include "user.h"
 
 typedef enum e_res_type {

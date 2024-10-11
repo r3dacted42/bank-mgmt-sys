@@ -4,6 +4,9 @@
 #include <ncursesw/curses.h>
 #include <ncursesw/ncurses.h>
 
+#define ARROW_LEFT "◀"
+#define ARROW_RIGHT "▶"
+
 void rectangle(int y1, int x1, int y2, int x2)
 {
     mvhline(y1, x1, 0, x2-x1);

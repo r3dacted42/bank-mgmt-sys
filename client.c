@@ -19,6 +19,9 @@
 #include "model/request.h"
 #include "model/response.h"
 #include "cwindows/adminmenu.h"
+#include "cwindows/managermenu.h"
+#include "cwindows/employeemenu.h"
+#include "cwindows/customermenu.h"
 
 #define PORT 5003
 
@@ -98,9 +101,10 @@ int main() {
     remove_window(lwin);
     if (logged_in) {
         switch (crole) {
-        case ADMIN:
-            admin_menu_window(sfd);
-            break;
+            case ADMIN: admin_menu_window(sfd); break;
+            case MANAGER: manager_menu_window(sfd); break;
+            case EMPLOYEE: employee_menu_window(sfd); break;
+            case CUSTOMER: customer_menu_window(sfd); break;
         }
         req = malloc(sizeof(Request));
         req->type = REQLOGOUT;

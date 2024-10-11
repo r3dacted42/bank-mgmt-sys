@@ -1,8 +1,6 @@
 #ifndef REQUEST_MODEL
 #define REQUEST_MODEL
 
-#include <stdlib.h>
-#include <string.h>
 #include "user.h"
 #include "../controller/customer.h"
 

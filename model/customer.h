@@ -12,7 +12,7 @@ typedef struct s_customer {
     char uname[UN_LEN];
     acc_state state;
     PersonalInfo pers_info;
-    long balance;
+    float balance;
 } Customer;
 
 #endif // CUSTOMER_MODEL
