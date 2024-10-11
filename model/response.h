@@ -21,6 +21,7 @@ typedef union u_res_data
 {
     user_role login;
     get_usr_data getusr;
+    float getbal;
 } res_data;
 
 typedef struct s_response {

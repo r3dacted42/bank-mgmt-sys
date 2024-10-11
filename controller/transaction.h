@@ -56,7 +56,7 @@ void tran_free(Transaction *trdata[]) {
 // time(&rawtime);
 // struct tm *timeinfo = localtime(&rawtime);
 
-bool tran_transfer(const char *un, const char *oun, long amt) {
+bool tran_transfer(const char *un, const char *oun, float amt) {
     int fd = open(CUST_DB_PATH, O_RDWR);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -109,14 +109,12 @@ bool tran_transfer(const char *un, const char *oun, long amt) {
     };
     strcpy(trdata.uname, un);
     strcpy(trdata.other_uname, oun);
-    int fd = open(TRAN_DB_PATH, O_CREAT | O_RDWR, 0644);
-    struct flock lck = {
-        .l_type = F_WRLCK,
-        .l_whence = SEEK_SET,
-        .l_start = 0,
-        .l_len = 0,
-        .l_pid = getpid()
-    };
+    fd = open(TRAN_DB_PATH, O_CREAT | O_RDWR, 0644);
+    lck.l_type = F_WRLCK,
+    lck.l_whence = SEEK_SET,
+    lck.l_start = 0,
+    lck.l_len = 0,
+    lck.l_pid = getpid();
     fcntl(fd, F_SETLKW, &lck);
     lseek(fd, 0, SEEK_END);
     // un -> oun
@@ -130,7 +128,7 @@ bool tran_transfer(const char *un, const char *oun, long amt) {
     fcntl(fd, F_SETLK, &lck);
 }
 
-bool tran_deposit(const char *un, long amt) {
+bool tran_deposit(const char *un, float amt) {
     int fd = open(CUST_DB_PATH, O_RDWR);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -181,7 +179,7 @@ bool tran_deposit(const char *un, long amt) {
     return true;
 }
 
-bool tran_withdraw(const char *un, long amt) {
+bool tran_withdraw(const char *un, float amt) {
     int fd = open(CUST_DB_PATH, O_RDWR);
     struct flock lck = {
         .l_type = F_RDLCK,

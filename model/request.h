@@ -11,7 +11,11 @@ typedef enum e_req_type {
     REQREGISTER,
     REQUPDTUSR,
     REQDLTUSR,
-    REQLOGOUT // needs no data
+    REQDEPOSIT,
+    REQWITHDRAW,
+    // need no data
+    REQGETBAL,
+    REQLOGOUT
 } req_type;
 
 typedef struct s_req_login_data {
@@ -55,6 +59,7 @@ typedef union u_req_data
     req_ureg_data ureg; // REQREGISTER
     req_uupdt_data uupdt; // REQUPDTUSR
     char udlt[UN_LEN]; // REQDLTUSR
+    float baldelta; // REQDEPOSIT, REQWITHDRAW
 } req_data;
 
 typedef struct s_request {

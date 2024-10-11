@@ -17,6 +17,7 @@
 #include "model/response.h"
 #include "controller/customer.h"
 #include "controller/employee.h"
+#include "controller/transaction.h"
 
 #define PORT 5003
 #define MAX_ACTIVE_USERS 500
@@ -250,6 +251,20 @@ void* service(void *arg) {
                 else cust_delete(utmp.uname);
                 res.type = RESSUCCESS;
             } else res.type = RESUNAUTH;
+        }
+        if (req.type == REQGETBAL) {
+            printf("[%d] user %s trying to get balance\n", args.num_requests, current_user.uname);
+            Customer ctmp;
+            res.type = cust_read(current_user.uname, &ctmp) ? RESSUCCESS : RESBADREQ;
+            if (res.type == RESSUCCESS) res.data.getbal = ctmp.balance;
+        }
+        if (req.type == REQDEPOSIT) {
+            printf("[%d] user %s trying to deposit moni\n", args.num_requests, current_user.uname);
+            res.type = tran_deposit(current_user.uname, req.data.baldelta) ? RESSUCCESS : RESBADREQ;
+        }
+        if (req.type == REQWITHDRAW) {
+            printf("[%d] user %s trying to withdraw moni\n", args.num_requests, current_user.uname);
+            res.type = tran_withdraw(current_user.uname, req.data.baldelta) ? RESSUCCESS : RESBADREQ;
         }
         write(cfd, &res, sizeof(Response));
         memset(&res, 0, sizeof(Response));
