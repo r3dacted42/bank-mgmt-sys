@@ -25,12 +25,6 @@
 
 #define PORT 5003
 
-void remove_window(WINDOW *win) {
-    wclear(win);
-    wrefresh(win);
-    delwin(win);
-}
-
 #define debug_text(FORMAT...) mvwprintw(win, 1, 1, FORMAT)
 
 WINDOW *win;
@@ -98,13 +92,13 @@ int main() {
         return -1;
     }
     free(res);
-    remove_window(lwin);
+    removewin(lwin);
     if (logged_in) {
         switch (crole) {
-            case ADMIN: admin_menu_window(sfd); break;
-            case MANAGER: manager_menu_window(sfd); break;
-            case EMPLOYEE: employee_menu_window(sfd); break;
-            case CUSTOMER: customer_menu_window(sfd); break;
+            case ADMIN: admin_menu_window(sfd, uname); break;
+            case MANAGER: manager_menu_window(sfd, uname); break;
+            case EMPLOYEE: employee_menu_window(sfd, uname); break;
+            case CUSTOMER: customer_menu_window(sfd, uname); break;
         }
         req = malloc(sizeof(Request));
         req->type = REQLOGOUT;

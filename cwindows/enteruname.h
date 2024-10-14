@@ -28,7 +28,7 @@ WINDOW* enter_uname_window(char *uname) {
     wrectangle(eunwin, h / 2 - 1, 18, h / 2 + 1, w - 5);
     wrefresh(eunwin);
     mvwscanw(eunwin, h / 2, 19, "%s", uname);
-    eun_update_message(eunwin, "Searching by username...");
+    eun_update_message(eunwin, "Searching username...");
     return eunwin;
 }
 

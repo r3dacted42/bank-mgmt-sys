@@ -5,6 +5,7 @@
 #include <ncursesw/ncurses.h>
 #include "../utilities/borders.h"
 #include "../utilities/shapes.h"
+#include "../utilities/removewin.h"
 #include "../model/request.h"
 #include "../model/response.h"
 #include "../cwindows/changepw.h"
@@ -12,26 +13,27 @@
 #include "../cwindows/enteruname.h"
 #include "../cwindows/viewedituser.h"
 
-void employee_menu_window(int sfd) {
+void employee_menu_window(int sfd, const char *uname) {
     int h = LINES - 2, w = COLS - 2;
-    WINDOW *cwin = newwin(h, w, 1, 1);
-    draw_heavy_border(cwin, h, w);
-    mvwprintw(cwin, 0, w / 2 - 8, " EMPLOYEE MENU ");
-    wrefresh(cwin);
+    WINDOW *ewin = newwin(h, w, 1, 1);
+    draw_heavy_border(ewin, h, w);
+    mvwprintw(ewin, 0, w / 2 - 8, " EMPLOYEE MENU ");
+    mvwprintw(ewin, h - 1, 1, " LOGGED IN AS %s (EMPLOYEE) ", uname);
+    wrefresh(ewin);
     int num_options = 6;
     char *options[] = {"Add New Customer", "Modify Customer", "Review Loan Applications", "View Customer Transactions", "Change Password", "Logout"};
     int highlight_idx = 0;
-    keypad(cwin, TRUE);
+    keypad(ewin, TRUE);
     while (1) {
         for (int i = 0; i < num_options; i++) {
-            if (highlight_idx == i) wattron(cwin, A_REVERSE);
-            mvwprintw(cwin, h / 2 - (num_options / 2 - i) * 2, w / 2 - strlen(options[i]) / 2, "%s", options[i]);
-            if (highlight_idx == i) wattroff(cwin, A_REVERSE);
+            if (highlight_idx == i) wattron(ewin, A_REVERSE);
+            mvwprintw(ewin, h / 2 - (num_options / 2 - i) * 2, w / 2 - strlen(options[i]) / 2, "%s", options[i]);
+            if (highlight_idx == i) wattroff(ewin, A_REVERSE);
         }
-        wrefresh(cwin);
-        int opt = wgetch(cwin);
+        wrefresh(ewin);
+        int opt = wgetch(ewin);
         if (opt == KEY_ENTER || opt == '\n' || opt == '\r') {
-            // mvwprintw(cwin, 1, 1, "%d", highlight_idx);
+            // mvwprintw(ewin, 1, 1, "%d", highlight_idx);
             if (highlight_idx == 0) {
                 // add cust
             } else if (highlight_idx == 1) {
@@ -52,18 +54,14 @@ void employee_menu_window(int sfd) {
                     chpw_update_message(chpwin, "Password change failed!");
                 }
                 wgetch(chpwin);
-                wclear(chpwin);
-                wrefresh(chpwin);
-                delwin(chpwin);
+                removewin(chpwin);
             } else if (highlight_idx == 5) break; // LOGOUT
         } 
         else if (opt == KEY_UP) highlight_idx = ((highlight_idx - 1 >= 0) ? (highlight_idx - 1) : num_options - 1);
         else if (opt == KEY_DOWN) highlight_idx = (highlight_idx + 1) % num_options;
     }
-    keypad(cwin, FALSE);
-    wclear(cwin);
-    wrefresh(cwin);
-    delwin(cwin);
+    keypad(ewin, FALSE);
+    removewin(ewin);
 }
 
 #endif // EMPLOYEE_MENU_CWINDOW

@@ -5,6 +5,7 @@
 #include <ncursesw/ncurses.h>
 #include "../utilities/borders.h"
 #include "../utilities/shapes.h"
+#include "../utilities/removewin.h"
 #include "../model/request.h"
 #include "../model/response.h"
 #include "../cwindows/changepw.h"
@@ -12,11 +13,12 @@
 #include "../cwindows/enteruname.h"
 #include "../cwindows/viewedituser.h"
 
-void admin_menu_window(int sfd) {
+void admin_menu_window(int sfd, const char *uname) {
     int h = LINES - 2, w = COLS - 2;
     WINDOW *awin = newwin(h, w, 1, 1);
     draw_heavy_border(awin, h, w);
     mvwprintw(awin, 0, w / 2 - 7, " ADMIN MENU ");
+    mvwprintw(awin, h - 1, 1, " LOGGED IN AS %s (ADMIN) ", uname);
     wrefresh(awin);
     int num_options = 5;
     char *options[] = {"Add New User", "View/Modify User", "Delete User", "Change Password", "Logout"};
@@ -45,9 +47,7 @@ void admin_menu_window(int sfd) {
                     chpw_update_message(chpwin, "Password change failed!");
                 }
                 wgetch(chpwin);
-                wclear(chpwin);
-                wrefresh(chpwin);
-                delwin(chpwin);
+                removewin(chpwin);
             } else if (highlight_idx == 0) {
                 Request req = { .type = REQREGISTER };
                 WINDOW *cusrwin = create_user_window(req.data.ureg.uname, req.data.ureg.pw, &req.data.ureg.role);
@@ -66,9 +66,7 @@ void admin_menu_window(int sfd) {
                     usw_update_message(cusrwin, "User creation failed!");
                 }
                 wgetch(cusrwin);
-                wclear(cusrwin);
-                wrefresh(cusrwin);
-                delwin(cusrwin);
+                removewin(cusrwin);
             } else if (highlight_idx == 1) {
                 char uname[UN_LEN];
                 Request req = { .type = REQGETUSR };
@@ -103,9 +101,7 @@ void admin_menu_window(int sfd) {
                     eun_update_message(eunwin, "User is an Admin, cannot proceed.");
                     wgetch(eunwin);
                 }
-                wclear(eunwin);
-                wrefresh(eunwin);
-                delwin(eunwin);
+                removewin(eunwin);
             } else if (highlight_idx == 2) {
                 Request req = { .type = REQDLTUSR };
                 WINDOW *eunwin = enter_uname_window(req.data.udlt);
@@ -120,18 +116,14 @@ void admin_menu_window(int sfd) {
                     eun_update_message(eunwin, "User is an Admin, cannot proceed.");
                 }
                 wgetch(eunwin);
-                wclear(eunwin);
-                wrefresh(eunwin);
-                delwin(eunwin);
+                removewin(eunwin);
             }
         } 
         else if (opt == KEY_UP) highlight_idx = ((highlight_idx - 1 >= 0) ? (highlight_idx - 1) : num_options - 1);
         else if (opt == KEY_DOWN) highlight_idx = (highlight_idx + 1) % num_options;
     }
     keypad(awin, FALSE);
-    wclear(awin);
-    wrefresh(awin);
-    delwin(awin);
+    removewin(awin);
 }
 
 #endif // ADMIN_MENU_CWINDOW

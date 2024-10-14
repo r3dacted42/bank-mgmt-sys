@@ -2,9 +2,11 @@
 #define RESPONSE_MODEL
 
 #include "user.h"
+#include "transaction.h"
 
 typedef enum e_res_type {
     RESSUCCESS,
+    RESEMPTY,
     RESBADREQ,
     RESUNAUTH,
     RESSERVERR
@@ -17,11 +19,19 @@ typedef struct s_get_usr_data {
     long cust_balance;
 } get_usr_data;
 
+typedef struct s_tran_list {
+    int page_len;
+    int total_pages;
+    tran_list_item lst[5];
+} tran_list;
+
 typedef union u_res_data
 {
     user_role login;
     get_usr_data getusr;
+    user_role getusrrole;
     float getbal;
+    tran_list viewtran;
 } res_data;
 
 typedef struct s_response {

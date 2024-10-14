@@ -25,13 +25,13 @@ WINDOW* login_window(char *uname, char *passwd) {
     draw_rounded_border(lwin, h, w);
     mvwprintw(lwin, 0, w / 2 - 4, " LOGIN ");
     mvwprintw(lwin, 3, 6, "Username: ");
-    mvwprintw(lwin, 6, 6, "Paswword: ");
+    mvwprintw(lwin, 6, 6, "Password: ");
     wrectangle(lwin, 2, 16, 4, w - 7);
     wrectangle(lwin, 5, 16, 7, w - 7);
     wrefresh(lwin);
     mvwscanw(lwin, 3, 17, "%s", uname);
     mvwscanw(lwin, 6, 17, "%s", passwd);
-    lw_update_message(lwin, "Loggin in...");
+    lw_update_message(lwin, "Logging in...");
     return lwin;
 }
 

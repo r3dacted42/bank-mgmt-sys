@@ -167,11 +167,7 @@ void* service(void *arg) {
                 res.type = RESSUCCESS;
                 if (temp.role == CUSTOMER) {
                     Customer ctemp;
-                    if (cust_read(req.data.getusr, &ctemp)) {
-                        printf("found customer data\n");
-                    }
                     memcpy(res.data.getusr.info.first_name, ctemp.pers_info.first_name, sizeof(PersonalInfo));
-                    printf("read %s, copied %s\n", ctemp.pers_info.last_name, res.data.getusr.info.last_name);
                     res.data.getusr.cust_state = ctemp.state;
                     res.data.getusr.cust_balance = ctemp.balance;
                 } else if (temp.role == EMPLOYEE || temp.role == MANAGER) {
@@ -181,6 +177,14 @@ void* service(void *arg) {
                 } else if (temp.role == ADMIN) {
                     res.type = RESUNAUTH;
                 }
+            } else res.type = RESBADREQ;
+        }
+        if (req.type == REQGETUSRROLE) {
+            printf("[%d] user %s trying to get role of (%s)\n", args.num_requests, current_user.uname, req.data.getusr);
+            User temp;
+            if (user_read(req.data.getusr, &temp)) {
+                res.data.getusrrole = temp.role;
+                res.type = RESSUCCESS;
             } else res.type = RESBADREQ;
         }
         if (req.type == REQUPDTUSR) {
@@ -265,6 +269,30 @@ void* service(void *arg) {
         if (req.type == REQWITHDRAW) {
             printf("[%d] user %s trying to withdraw moni\n", args.num_requests, current_user.uname);
             res.type = tran_withdraw(current_user.uname, req.data.baldelta) ? RESSUCCESS : RESBADREQ;
+        }
+        if (req.type == REQTRANSFER) {
+            printf("[%d] user %s trying to transfer moni to (%s)\n", args.num_requests, current_user.uname, req.data.transfer.oun);
+            res.type = tran_transfer(current_user.uname, req.data.transfer.oun, req.data.transfer.amt) ? RESSUCCESS : RESBADREQ;
+        }
+        if (req.type == REQVIEWTRAN) {
+            printf("[%d] user %s trying to view transaction history (page %d)\n", args.num_requests, current_user.uname, req.data.viewtran.page_num);
+            Transaction **trlist;
+            int len = 0;
+            if (req.data.viewtran.un[0]) len = tran_read_usr(req.data.viewtran.un, &trlist);
+            else len = tran_read_usr(current_user.uname, &trlist);
+            if (len > 0) {
+                res.type = RESSUCCESS;
+                res.data.viewtran.total_pages = len / 5 + (len % 5 != 0); // one extra page if remainder exists
+                if (req.data.viewtran.page_num < res.data.viewtran.total_pages) {
+                    res.data.viewtran.page_len = len - req.data.viewtran.page_num * 5;
+                    if (res.data.viewtran.page_len > 5) res.data.viewtran.page_len = 5;
+                    for (int i = 0; i < res.data.viewtran.page_len && trlist[req.data.viewtran.page_num * 5 + i] != NULL; i++) {
+                        int lidx = req.data.viewtran.page_num * 5 + i;
+                        memcpy(&(res.data.viewtran.lst[i].other_username), &(trlist[lidx]->other_uname), sizeof(tran_list_item));
+                    }
+                } else res.type = RESBADREQ;
+                tran_free(&trlist);
+            } else res.type = RESEMPTY;
         }
         write(cfd, &res, sizeof(Response));
         memset(&res, 0, sizeof(Response));
