@@ -87,8 +87,10 @@ WINDOW* transaction_history_window(int sfd, const char *uname) {
     read(sfd, &res, sizeof(Response));
     if (res.type == RESBADREQ) {
         trh_update_message(trhwin, "Bad request!!! >:(((");
+        wgetch(trhwin);
     } else if (res.type == RESEMPTY) {
         trh_update_message(trhwin, "No records found");
+        wgetch(trhwin);
     } else {
         trh_draw_table(trhwin, sfd, uname, res);
     }

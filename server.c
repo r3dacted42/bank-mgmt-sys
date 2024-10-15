@@ -135,7 +135,8 @@ void* service(void *arg) {
             } else res.type = RESBADREQ;
         }
         if (req.type == REQREGISTER) {
-            printf("[%d] user %s trying to create user\n", args.num_requests, current_user.uname);
+            printf("[%d] user %s trying to create user (%s, %d)\n", args.num_requests, current_user.uname,
+            req.data.ureg.uname, req.data.ureg.role);
             if (current_user.role == ADMIN || req.data.ureg.role > current_user.role) {
                 if (user_register(req.data.ureg.uname, req.data.ureg.pw, req.data.ureg.role) == REGSUCCESS) {
                     if (req.data.ureg.role != ADMIN) {
@@ -167,7 +168,8 @@ void* service(void *arg) {
                 res.type = RESSUCCESS;
                 if (temp.role == CUSTOMER) {
                     Customer ctemp;
-                    memcpy(res.data.getusr.info.first_name, ctemp.pers_info.first_name, sizeof(PersonalInfo));
+                    cust_read(req.data.getusr, &ctemp);
+                    memcpy(&res.data.getusr.info, &ctemp.pers_info, sizeof(PersonalInfo));
                     res.data.getusr.cust_state = ctemp.state;
                     res.data.getusr.cust_balance = ctemp.balance;
                 } else if (temp.role == EMPLOYEE || temp.role == MANAGER) {
@@ -189,6 +191,9 @@ void* service(void *arg) {
         }
         if (req.type == REQUPDTUSR) {
             printf("[%d] user %s trying to update (%s)\n", args.num_requests, current_user.uname, req.data.uupdt.uname);
+            printf("un:%s nun:%s pw:%s rl:%d | fn:%s ln:%s\n", req.data.uupdt.uname, req.data.uupdt.nuname, req.data.uupdt.pw, 
+            req.data.uupdt.role, req.data.uupdt.info.first_name, req.data.uupdt.info.last_name);
+            getchar();
             User utemp;
             if (!user_read(req.data.uupdt.uname, &utemp)) res.type = RESBADREQ;
             else if (current_user.role < utemp.role) {

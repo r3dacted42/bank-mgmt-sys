@@ -37,7 +37,6 @@ typedef struct s_req_chpw_data {
 
 typedef struct s_req_ureg_data {
     char uname[UN_LEN];
-    char nuname[UN_LEN];
     char pw[PW_LEN];
     user_role role;
     PersonalInfo info;

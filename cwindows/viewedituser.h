@@ -9,8 +9,8 @@
 #include "../model/common.h"
 #include "../model/request.h"
 
-#define hilt(idx) if (active_idx == idx) wattron(uvewin, A_REVERSE)
-#define unlt(idx) if (active_idx == idx) wattroff(uvewin, A_REVERSE)
+#define hilt(win, idx) if (active_idx == idx) wattron(win, A_REVERSE)
+#define unlt(win, idx) if (active_idx == idx) wattroff(win, A_REVERSE)
 
 void roletostr(user_role role, char *str) {
     memset(str, 0, 10);
@@ -66,15 +66,15 @@ bool view_edit_user_window(req_uupdt_data *udata) {
     keypad(uvewin, TRUE);
     bool pw_modified = false;
     while (1) {
-        hilt(0); mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", udata->nuname); unlt(0);
-        hilt(1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->pw); unlt(1);
+        hilt(uvewin, 0); mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", udata->nuname); unlt(uvewin, 0);
+        hilt(uvewin, 1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->pw); unlt(uvewin, 1);
         roletostr(udata->role, rolestr);
         mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", eraser);
         mvwprintw(uvewin, fy + dfy + 1, fx + 1, ARROW_LEFT);
         mvwprintw(uvewin, fy + dfy + 1, fx + fw - 1, ARROW_RIGHT);
-        hilt(2); mvwprintw(uvewin, fy + dfy + 1, fx + fw / 2 - strlen(rolestr) / 2, "%s", rolestr); unlt(2);
-        hilt(3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(3);
-        hilt(4); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[N] NEXT"); unlt(4);
+        hilt(uvewin, 2); mvwprintw(uvewin, fy + dfy + 1, fx + fw / 2 - strlen(rolestr) / 2, "%s", rolestr); unlt(uvewin, 2);
+        hilt(uvewin, 3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(uvewin, 3);
+        hilt(uvewin, 4); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[N] NEXT"); unlt(uvewin, 4);
         wrefresh(uvewin);
         int opt = wgetch(uvewin);
         if (opt == 'x' || opt == 'X') {
@@ -131,13 +131,13 @@ bool view_edit_user_window(req_uupdt_data *udata) {
     wrectangle(uvewin, fy + 2 * dfy, fx, fy + fh + 2 * dfy, fx + fw);
     active_idx = 0;
     while (1) {
-        hilt(0); mvwprintw(uvewin, fy - 2 * dfy + 1, fx + 1, "%s", udata->info.first_name); unlt(0);
-        hilt(1); mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", udata->info.last_name); unlt(1);
-        hilt(2); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->info.email); unlt(2);
-        hilt(3); mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", udata->info.phone); unlt(3);
-        hilt(4); mvwprintw(uvewin, fy + 2 * dfy + 1, fx + 1, "%s", udata->info.dob); unlt(4);
-        hilt(5); mvwprintw(uvewin, fy + 3 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(5);
-        hilt(6); mvwprintw(uvewin, fy + 3 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[N] NEXT"); unlt(6);
+        hilt(uvewin, 0); mvwprintw(uvewin, fy - 2 * dfy + 1, fx + 1, "%s", udata->info.first_name); unlt(uvewin, 0);
+        hilt(uvewin, 1); mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", udata->info.last_name); unlt(uvewin, 1);
+        hilt(uvewin, 2); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->info.email); unlt(uvewin, 2);
+        hilt(uvewin, 3); mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", udata->info.phone); unlt(uvewin, 3);
+        hilt(uvewin, 4); mvwprintw(uvewin, fy + 2 * dfy + 1, fx + 1, "%s", udata->info.dob); unlt(uvewin, 4);
+        hilt(uvewin, 5); mvwprintw(uvewin, fy + 3 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(uvewin, 5);
+        hilt(uvewin, 6); mvwprintw(uvewin, fy + 3 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[N] NEXT"); unlt(uvewin, 6);
         wrefresh(uvewin);
         int opt = wgetch(uvewin);
         if (opt == 'x' || opt == 'X') {
@@ -199,11 +199,11 @@ bool view_edit_user_window(req_uupdt_data *udata) {
         mvwprintw(uvewin, fy - dfy + 1, fx + 1, "%s", eraser);
         mvwprintw(uvewin, fy - dfy + 1, fx + 1, ARROW_LEFT);
         mvwprintw(uvewin, fy - dfy + 1, fx + fw - 1, ARROW_RIGHT);
-        hilt(0); mvwprintw(uvewin, fy - dfy + 1, fx + fw / 2 - strlen(genderstr) / 2, "%s", genderstr); unlt(0);
-        hilt(1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->info.city); unlt(1);
-        hilt(2); mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", udata->info.zip_code); unlt(2);
-        hilt(3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(3);
-        hilt(4); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[S] SAVE"); unlt(4);
+        hilt(uvewin, 0); mvwprintw(uvewin, fy - dfy + 1, fx + fw / 2 - strlen(genderstr) / 2, "%s", genderstr); unlt(uvewin, 0);
+        hilt(uvewin, 1); mvwprintw(uvewin, fy + 1, fx + 1, "%s", udata->info.city); unlt(uvewin, 1);
+        hilt(uvewin, 2); mvwprintw(uvewin, fy + dfy + 1, fx + 1, "%s", udata->info.zip_code); unlt(uvewin, 2);
+        hilt(uvewin, 3); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 1 / 3 - 11 / 2, "[X] CANCEL"); unlt(uvewin, 3);
+        hilt(uvewin, 4); mvwprintw(uvewin, fy + 2 * dfy + 1, COLS * 2 / 3 - 9 / 2, "[S] SAVE"); unlt(uvewin, 4);
         wrefresh(uvewin);
         int opt = wgetch(uvewin);
         if (opt == 'x' || opt == 'X') {
