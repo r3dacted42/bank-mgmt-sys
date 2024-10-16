@@ -90,7 +90,7 @@ WINDOW* apply_loan_window(Loan *lndata) {
         mvwprintw(alnwin, fy + 1, fx + fw / 2 - strlen(estr) / 2, "%s", estr);
         int opt = wgetch(alnwin);
         if (opt == KEY_ENTER || opt == '\n' || opt == '\r') break;
-        mvwprintw(alnwin, fy + 1, fx + fw / 2 - 5, "          ");
+        mvwprintw(alnwin, fy + 1, fx + fw / 2 - 8, "               ");
         if (opt == KEY_LEFT) lndata->emp_status = (employment_status)(lndata->emp_status > 0 ? lndata->emp_status - 1 : EMP_STAT_MAX);
         if (opt == KEY_RIGHT) lndata->emp_status = (employment_status)(lndata->emp_status < EMP_STAT_MAX ? lndata->emp_status + 1 : 0);
     }
