@@ -31,9 +31,7 @@ WINDOW *win;
 int sfd;
 
 void graceful_exit(int sig) {
-    if (sig != SIGINT) return;
-    Request req;
-    req.type = REQLOGOUT;
+    Request req = { .type = REQLOGOUT };
     write(sfd, &req, sizeof(Request));
     delwin(win);
 	endwin();
@@ -70,28 +68,26 @@ int main() {
     char uname[UN_LEN], passwd[PW_LEN];
     WINDOW *lwin = login_window(uname, passwd);
     
-    Request *req = malloc(sizeof(Request));
-    req->type = REQLOGIN;
-    strcpy(req->data.login.uname, uname);
-    strcpy(req->data.login.pw, passwd);
-    Response *res = malloc(sizeof(Response));
+    Request req = { .type = REQLOGIN };
+    strcpy(req.data.login.uname, uname);
+    strcpy(req.data.login.pw, passwd);
     bool logged_in = false;
     user_role crole;
-    write(sfd, req, sizeof(Request));
-    free(req);
-    read(sfd, res, sizeof(Response));
-    logged_in = res->type == RESSUCCESS;
+    write(sfd, &req, sizeof(Request));
+    Response res;
+    read(sfd, &res, sizeof(Response));
+    logged_in = res.type == RESSUCCESS;
     if (logged_in) {
-        crole = res->data.login;
+        crole = res.data.login;
     } else {
         lw_update_message(lwin, "Login failed! Exiting...");
         wgetch(lwin);
+        removewin(lwin);
         delwin(win);
         endwin();
         close(sfd);
         return -1;
     }
-    free(res);
     removewin(lwin);
     if (logged_in) {
         switch (crole) {
@@ -100,13 +96,10 @@ int main() {
             case EMPLOYEE: employee_menu_window(sfd, uname); break;
             case CUSTOMER: customer_menu_window(sfd, uname); break;
         }
-        req = malloc(sizeof(Request));
-        req->type = REQLOGOUT;
-        write(sfd, req, sizeof(Request));
-        free(req);
+        req.type = REQLOGOUT;
+        write(sfd, &req, sizeof(Request));
         mvwprintw(win, LINES / 2 - 1, COLS / 2 - 37 / 2, "Logged out... Press any key to exit.");
     }
-    
     wgetch(win);
     delwin(win);
 	endwin();

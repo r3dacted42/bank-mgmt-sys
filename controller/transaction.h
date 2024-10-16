@@ -44,11 +44,8 @@ int tran_read_usr(const char *uname, Transaction ***trdata) {
 }
 
 void tran_free(Transaction ***trdata) {
-    int i = 0;
-    for ( ; (*trdata)[i] != NULL; i++) {
-        free((*trdata)[i]);
-    }
-    free(*trdata); // trailing NULL
+    for (int i = 0; (*trdata)[i] != NULL; i++) free((*trdata)[i]);
+    free(*trdata);
 }
 
 bool tran_transfer(const char *un, const char *oun, float amt) {
@@ -99,13 +96,13 @@ bool tran_transfer(const char *un, const char *oun, float amt) {
     fcntl(fd, F_SETLK, &olck);
     // add transaction records
     Transaction trdata = {
-        .is_transfer = true,
+        .op = TRANSFER,
         .type = DEBIT,
         .amount = amt,
         .timestp = time(NULL)
     };
     Transaction trdatao = {
-        .is_transfer = true,
+        .op = TRANSFER,
         .type = CREDIT,
         .amount = amt,
         .timestp = time(NULL)
@@ -131,7 +128,9 @@ bool tran_transfer(const char *un, const char *oun, float amt) {
     return true;
 }
 
-bool tran_deposit(const char *un, float amt) {
+// op must be WITHDRAW or LOAN
+bool tran_deposit(const char *un, float amt, tr_operation op) {
+    if (op != WITHDRAW || op != LOAN) return false;
     int fd = open(CUST_DB_PATH, O_RDWR);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -166,12 +165,12 @@ bool tran_deposit(const char *un, float amt) {
     close(fd);
     // add transaction record
     Transaction trdata = {
+        .op = op,
         .type = CREDIT,
         .amount = amt,
         .timestp = time(NULL)
     };
     strcpy(trdata.uname, un);
-    trdata.is_transfer = false;
     fd = open(TRAN_DB_PATH, O_CREAT | O_RDWR | O_APPEND, 0644);
     lck.l_type = F_WRLCK;
     fcntl(fd, F_SETLKW, &lck);
@@ -223,7 +222,7 @@ bool tran_withdraw(const char *un, float amt) {
         .timestp = time(NULL)
     };
     strcpy(trdata.uname, un);
-    trdata.is_transfer = false;
+    trdata.op = WITHDRAW;
     fd = open(TRAN_DB_PATH, O_CREAT | O_RDWR | O_APPEND, 0644);
     lck.l_type = F_WRLCK;
     fcntl(fd, F_SETLKW, &lck);

@@ -52,6 +52,9 @@ void employee_menu_window(int sfd, const char *uname) {
                 wgetch(ccustwin);
                 removewin(ccustwin);
             } else if (highlight_idx == 1) {
+                // DISABLED UNTIL FIX
+                continue;
+                
                 char uname[UN_LEN];
                 Request req = { .type = REQGETUSR };
                 WINDOW *eunwin = enter_uname_window(req.data.getusr);
@@ -66,7 +69,6 @@ void employee_menu_window(int sfd, const char *uname) {
                     req.type = REQUPDTUSR;
                     strcpy(req.data.uupdt.uname, uname);
                     strcpy(req.data.uupdt.nuname, uname);
-                    memset(req.data.uupdt.pw, 0, PW_LEN);
                     memcpy(&req.data.uupdt.role, &res.data.getusr.role, sizeof(get_usr_data));
                     if (edit_customer_window(&req.data.uupdt)) {
                         write(sfd, &req, sizeof(Request));

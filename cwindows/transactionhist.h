@@ -47,9 +47,11 @@ void trh_draw_table(WINDOW *trhwin, int sfd, const char *un, Response res) {
             char timestr[32];
             strftime(timestr, sizeof(timestr), "%H:%M:%S %Y-%m-%d", timeinfo);
             mvwprintw(trhwin, ty - (2 - i) * dty, field_start[field_idx++], "%s", timestr);
-            char opstr[20];
-            if (res.data.viewtran.lst[i].is_transfer) sprintf(opstr, "TRANSFER");
-            else sprintf(opstr, "%s", (res.data.viewtran.lst[i].type == CREDIT ? "DEPOSIT" : "WITHDRAW"));
+            char opstr[20] = {};
+            if (res.data.viewtran.lst[i].op == DEPOSIT) sprintf(opstr, "DEPOSIT");
+            else if (res.data.viewtran.lst[i].op == WITHDRAW) sprintf(opstr, "WITHDRAW");
+            else if (res.data.viewtran.lst[i].op == TRANSFER) sprintf(opstr, "TRANSFER");
+            else if (res.data.viewtran.lst[i].op == LOAN) sprintf(opstr, "LOAN");
             mvwprintw(trhwin, ty - (2 - i) * dty, field_start[field_idx++], "%s", opstr);
             mvwprintw(trhwin, ty - (2 - i) * dty, field_start[field_idx++], "%s", res.data.viewtran.lst[i].other_username);
             mvwprintw(trhwin, ty - (2 - i) * dty, field_start[field_idx++], "₹ %.2f", res.data.viewtran.lst[i].amount);

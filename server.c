@@ -18,6 +18,7 @@
 #include "controller/customer.h"
 #include "controller/employee.h"
 #include "controller/transaction.h"
+#include "controller/loan.h"
 
 #define PORT 5003
 #define MAX_ACTIVE_USERS 500
@@ -269,7 +270,7 @@ void* service(void *arg) {
         }
         if (req.type == REQDEPOSIT) {
             printf("[%d] user %s trying to deposit moni\n", args.num_requests, current_user.uname);
-            res.type = tran_deposit(current_user.uname, req.data.baldelta) ? RESSUCCESS : RESBADREQ;
+            res.type = tran_deposit(current_user.uname, req.data.baldelta, DEPOSIT) ? RESSUCCESS : RESBADREQ;
         }
         if (req.type == REQWITHDRAW) {
             printf("[%d] user %s trying to withdraw moni\n", args.num_requests, current_user.uname);
@@ -298,6 +299,10 @@ void* service(void *arg) {
                 } else res.type = RESBADREQ;
                 tran_free(&trlist);
             } else res.type = RESEMPTY;
+        }
+        if (req.type == REQLOANAPPL) {
+            printf("[%d] user %s trying to apply for loan\n", args.num_requests, current_user.uname);
+            res.type = (loan_apply(&req.data.loanappl) ? RESSUCCESS : RESBADREQ);
         }
         write(cfd, &res, sizeof(Response));
         memset(&res, 0, sizeof(Response));

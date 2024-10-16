@@ -12,6 +12,7 @@
 #include "../cwindows/enteramount.h"
 #include "../cwindows/enteruname.h"
 #include "../cwindows/transactionhist.h"
+#include "../cwindows/applyloan.h"
 
 void view_balance(int sfd) {
     Request req = { .type = REQGETBAL };
@@ -101,7 +102,18 @@ void customer_menu_window(int sfd, const char *uname) {
                     removewin(eamtwin);
                 }
             } else if (highlight_idx == 4) {
-                // apply for loan
+                Request req = { .type = REQLOANAPPL };
+                WINDOW *alnwin = apply_loan_window(&req.data.loanappl);
+                write(sfd, &req, sizeof(Request));
+                Response res;
+                read(sfd, &res, sizeof(Response));
+                if (res.type == RESSUCCESS) {
+                    aln_update_message(alnwin, "Loan application submitted!");
+                } else {
+                    aln_update_message(alnwin, "Submission failed!");
+                }
+                wgetch(alnwin);
+                removewin(alnwin);
             } else if (highlight_idx == 5) {
                 // view loan applications
             } else if (highlight_idx == 6) {

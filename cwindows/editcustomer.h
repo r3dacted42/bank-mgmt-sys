@@ -12,6 +12,7 @@
 #include "viewedituser.h"
 
 bool edit_customer_window(req_uupdt_data *udata) {
+    memset(udata->pw, 0, PW_LEN);
     int h = LINES - 4, w = COLS - 4;
     WINDOW *ecustwin = newwin(h, w, 2, 2);
     draw_rounded_border(ecustwin, h, w);

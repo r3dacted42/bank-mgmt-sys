@@ -3,6 +3,7 @@
 
 #include "user.h"
 #include "../controller/customer.h"
+#include "../controller/loan.h"
 
 typedef enum e_req_type {
     REQLOGIN,
@@ -16,6 +17,7 @@ typedef enum e_req_type {
     REQWITHDRAW,
     REQTRANSFER,
     REQVIEWTRAN,
+    REQLOANAPPL,
     // need no data
     REQGETBAL,
     REQLOGOUT
@@ -74,6 +76,7 @@ typedef union u_req_data
     float baldelta; // REQDEPOSIT, REQWITHDRAW
     transfer_data transfer; // REQTRANSFER
     view_tran_data viewtran; // REQVIEWTRAN
+    Loan loanappl; // REQLOANAPPL
 } req_data;
 
 typedef struct s_request {

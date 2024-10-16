@@ -8,9 +8,16 @@ typedef enum e_tr_type {
     DEBIT
 } tr_type;
 
+typedef enum e_tr_operation {
+    DEPOSIT,
+    WITHDRAW,
+    TRANSFER,
+    LOAN
+} tr_operation;
+
 typedef struct s_tran_list_item {
     char other_username[UN_LEN];
-    bool is_transfer;
+    tr_operation op;
     tr_type type;
     float amount;
     long timestp;
@@ -19,7 +26,7 @@ typedef struct s_tran_list_item {
 typedef struct s_transaction {
     char uname[UN_LEN];
     char other_uname[UN_LEN];
-    bool is_transfer;
+    tr_operation op;
     tr_type type;
     float amount;
     long timestp;
