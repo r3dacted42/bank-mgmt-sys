@@ -32,6 +32,9 @@ typedef union u_res_data
     user_role getusrrole;
     float getbal;
     tran_list viewtran;
+    int lnassgn; // number of loans appls to read
+    int getallemp;
+    char msg[64]; // error message
 } res_data;
 
 typedef struct s_response {

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "../model/employee.h"
+#include "../controller/user.h"
 
 #define EMP_DB_PATH "database/employees.db"
 
@@ -30,6 +31,64 @@ bool emp_read(const char *uname, Employee *emdata) {
     fcntl(fd, F_SETLK, &lck);
     if (!found) emdata = NULL;
     return found;
+}
+
+int emp_read_all(Employee ***emdata) {
+    int fd = open(EMP_DB_PATH, O_CREAT | O_RDWR, 0644);
+    struct flock lck = {
+        .l_type = F_RDLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0,
+        .l_len = 0,
+        .l_pid = getpid()
+    };
+    fcntl(fd, F_SETLKW, &lck);
+    int count = lseek(fd, 0, SEEK_END) / sizeof(Employee);
+    *emdata = (Employee**)calloc(count + 1, sizeof(Employee*));
+    (*emdata)[count] = NULL; // trailing NULL
+    lseek(fd, 0, SEEK_SET);
+    for (int i = 0; i < count; i++) {
+        (*emdata)[i] = (Employee*)malloc(sizeof(Employee));
+        int rd = read(fd, (*emdata)[i], sizeof(Employee));
+        if (rd != sizeof(Employee)) break;
+    }
+    lck.l_type = F_UNLCK;
+    fcntl(fd, F_SETLK, &lck);
+    return count;
+}
+
+int emp_read_all_no_man(Employee ***emdata) {
+    int count = 0;
+    int ufd = open(USER_DB_PATH, O_RDONLY);
+    struct flock ulck = {
+        .l_type = F_RDLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0,
+        .l_len = 0,
+        .l_pid = getpid()
+    };
+    fcntl(ufd, F_SETLKW, &ulck);
+    User temp;
+    while (read(ufd, &temp, sizeof(User)) > 0) if (temp.role == EMPLOYEE) count++;
+    *emdata = (Employee**)calloc(count + 1, sizeof(Employee*));
+    (*emdata)[count] = NULL; // trailing NULL
+    lseek(ufd, 0, SEEK_SET);
+    for (int i = 0; i < count; ) {
+        read(ufd, &temp, sizeof(User));
+        if (temp.role == EMPLOYEE) {
+            (*emdata)[i] = (Employee*)malloc(sizeof(Employee));
+            emp_read(temp.uname, (*emdata)[i]);
+            i++;
+        }
+    }
+    ulck.l_type = F_UNLCK;
+    fcntl(ufd, F_SETLK, &ulck);
+    return count;
+}
+
+void emp_free(Employee ***emdata) {
+    for (int i = 0; (*emdata)[i] != NULL; i++) free((*emdata)[i]);
+    free(*emdata);
 }
 
 bool emp_create(const Employee *emdata) {

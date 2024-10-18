@@ -102,7 +102,7 @@ void customer_menu_window(int sfd, const char *uname) {
                     removewin(eamtwin);
                 }
             } else if (highlight_idx == 4) {
-                Request req = { .type = REQLOANAPPL };
+                Request req = { .type = REQLNAPPL };
                 WINDOW *alnwin = apply_loan_window(&req.data.loanappl);
                 write(sfd, &req, sizeof(Request));
                 Response res;

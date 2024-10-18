@@ -12,6 +12,7 @@
 #include "../cwindows/createuser.h"
 #include "../cwindows/enteruname.h"
 #include "../cwindows/viewedituser.h"
+#include "../cwindows/assignloans.h"
 
 void manager_menu_window(int sfd, const char *uname) {
     int h = LINES - 2, w = COLS - 2;
@@ -37,7 +38,7 @@ void manager_menu_window(int sfd, const char *uname) {
             if (highlight_idx == 0) {
                 // act/deact cust
             } else if (highlight_idx == 1) {
-                // assign loans
+                assign_loans_window(sfd);
             } else if (highlight_idx == 2) {
                 // review feedback
             } else if (highlight_idx == 3) {

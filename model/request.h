@@ -17,9 +17,12 @@ typedef enum e_req_type {
     REQWITHDRAW,
     REQTRANSFER,
     REQVIEWTRAN,
-    REQLOANAPPL,
+    REQLNAPPL,
+    REQLNASSGNPOST,
     // need no data
     REQGETBAL,
+    REQLNASSGNGET,
+    REQGETEMPS,
     REQLOGOUT
 } req_type;
 
@@ -65,6 +68,11 @@ typedef struct s_view_tran_data {
     int page_num;
 } view_tran_data;
 
+typedef struct s_ln_assgn_post_data {
+    long loan_id;
+    char eun[UN_LEN];
+} ln_assgn_post_data;
+
 typedef union u_req_data
 {
     req_login_data login; // REQLOGIN
@@ -76,7 +84,8 @@ typedef union u_req_data
     float baldelta; // REQDEPOSIT, REQWITHDRAW
     transfer_data transfer; // REQTRANSFER
     view_tran_data viewtran; // REQVIEWTRAN
-    Loan loanappl; // REQLOANAPPL
+    Loan loanappl; // REQLNAPPL
+    ln_assgn_post_data lnassgn; // REDLNASSGNPOST
 } req_data;
 
 typedef struct s_request {

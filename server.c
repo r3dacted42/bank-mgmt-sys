@@ -121,8 +121,9 @@ void* service(void *arg) {
         return NULL;
     }
     while (1) {
-        read(cfd, &req, sizeof(Request));
-        if (req.type == REQLOGOUT) {
+        int bytesread = read(cfd, &req, sizeof(Request));
+        bool bufdata = false;
+        if (bytesread <= 0 || req.type == REQLOGOUT) {
             printf("[%d] user %s logged out\n", args.num_requests, current_user.uname);
             unmark_user(&current_user);
             break;
@@ -297,14 +298,61 @@ void* service(void *arg) {
                         memcpy(&(res.data.viewtran.lst[i].other_username), &(trlist[lidx]->other_uname), sizeof(tran_list_item));
                     }
                 } else res.type = RESBADREQ;
-                tran_free(&trlist);
             } else res.type = RESEMPTY;
+            tran_free(&trlist);
         }
-        if (req.type == REQLOANAPPL) {
+        if (req.type == REQLNAPPL) {
             printf("[%d] user %s trying to apply for loan\n", args.num_requests, current_user.uname);
             res.type = (loan_apply(&req.data.loanappl) ? RESSUCCESS : RESBADREQ);
         }
-        write(cfd, &res, sizeof(Response));
+        if (req.type == REQLNASSGNGET) {
+            printf("[%d] user %s trying to get unassigned loans\n", args.num_requests, current_user.uname);
+            if (current_user.role < MANAGER) res.type = RESUNAUTH;
+            else {
+                Loan **lnlist;
+                int count = loan_read_man(&lnlist);
+                if (count > 0) {
+                    res.type = RESSUCCESS;
+                    res.data.lnassgn = count;
+                    bufdata = true;
+                    write(cfd, &res, sizeof(Response));
+                    for (int i = 0; i < count; i++) {
+                        write(cfd, lnlist[i], sizeof(Loan));
+                    }
+                } else res.type = RESEMPTY;
+                loan_free(&lnlist);
+            }
+        }
+        if (req.type == REQGETEMPS) {
+            printf("[%d] user %s trying to get employees\n", args.num_requests, current_user.uname);
+            if (current_user.role < MANAGER) res.type = RESUNAUTH;
+            else {
+                Employee **emlist;
+                int count = emp_read_all_no_man(&emlist);
+                if (count > 0) {
+                    res.type = RESSUCCESS;
+                    res.data.getallemp = count;
+                    bufdata = true;
+                    write(cfd, &res, sizeof(Response));
+                    for (int i = 0; i < count; i++) write(cfd, emlist[i], sizeof(Employee));
+                } else res.type = RESEMPTY;
+                emp_free(&emlist);
+            }
+        }
+        if (req.type == REQLNASSGNPOST) {
+            printf("[%d] user %s trying to assign loan id (%ld)\n", args.num_requests, current_user.uname, req.data.lnassgn.loan_id);
+            if (current_user.role < MANAGER) res.type = RESUNAUTH;
+            else {
+                ln_assgn_result result = loan_assign(req.data.lnassgn.loan_id, req.data.lnassgn.eun);
+                if (result == LNASGN_SUCCESS) res.type = RESSUCCESS;
+                else {
+                    res.type = RESBADREQ;
+                    if (result == LNASGN_ALREADYASSGND) sprintf(res.data.msg, "Loan application already assigned to %s", req.data.lnassgn.eun);
+                    else sprintf(res.data.msg, "Loan ID not found");
+                }
+            }
+        }
+        if (!bufdata) write(cfd, &res, sizeof(Response));
         memset(&res, 0, sizeof(Response));
     }
     printf("exiting thread for request #%d\n", args.num_requests);

@@ -34,11 +34,11 @@ int loan_read_cust(const char *cun, Loan ***lndata) {
     // printf("found %d records!\n", count);
     *lndata = (Loan**)calloc(count + 1, sizeof(Loan*));
     (*lndata)[count] = NULL;
-    lseek(fd, 0, SEEK_SET);
-    for (int index = count - 1; read(fd, &tmp, sizeof(Loan)) > 0; ) {
+    SKIP_ID;
+    for (int index = 0; read(fd, &tmp, sizeof(Loan)) > 0; ) {
         if (strcmp(tmp.applicant_cust, cun) == 0) {
             (*lndata)[index] = (Loan*)malloc(sizeof(Loan));
-            memcpy((*lndata)[index--], &tmp, sizeof(Loan));
+            memcpy((*lndata)[index++], &tmp, sizeof(Loan));
         }
     }
     lck.l_type = F_UNLCK;
@@ -65,11 +65,11 @@ int loan_read_empl(const char *eun, Loan***lndata) {
     // printf("found %d records!\n", count);
     *lndata = (Loan**)calloc(count + 1, sizeof(Loan*));
     (*lndata)[count] = NULL;
-    lseek(fd, 0, SEEK_SET);
-    for (int index = count - 1; read(fd, &tmp, sizeof(Loan)) > 0; ) {
+    SKIP_ID;
+    for (int index = 0; read(fd, &tmp, sizeof(Loan)) > 0; ) {
         if (strcmp(tmp.assignee_emp, eun) == 0) {
             (*lndata)[index] = (Loan*)malloc(sizeof(Loan));
-            memcpy((*lndata)[index--], &tmp, sizeof(Loan));
+            memcpy((*lndata)[index++], &tmp, sizeof(Loan));
         }
     }
     lck.l_type = F_UNLCK;
@@ -96,11 +96,11 @@ int loan_read_man(Loan ***lndata) {
     // printf("found %d records!\n", count);
     *lndata = (Loan**)calloc(count + 1, sizeof(Loan*));
     (*lndata)[count] = NULL;
-    lseek(fd, 0, SEEK_SET);
-    for (int index = count - 1; read(fd, &tmp, sizeof(Loan)) > 0; ) {
+    SKIP_ID;
+    for (int index = 0; read(fd, &tmp, sizeof(Loan)) > 0; ) {
         if (tmp.assignee_emp[0] == 0) {
             (*lndata)[index] = (Loan*)malloc(sizeof(Loan));
-            memcpy((*lndata)[index--], &tmp, sizeof(Loan));
+            memcpy((*lndata)[index++], &tmp, sizeof(Loan));
         }
     }
     lck.l_type = F_UNLCK;
@@ -130,22 +130,30 @@ bool loan_apply(Loan *lndata) {
     fcntl(fd, F_SETLKW, &lck);
     long max_id = 0;
     read(fd, &max_id, sizeof(long));
+    printf("read max_id: %ld\n", max_id++);
+    // update max_id
+    lseek(fd, 0, SEEK_SET);
+    write(fd, &max_id, sizeof(long));
+    // write loan data
     lseek(fd, 0, SEEK_END);
-    lndata->loan_id = max_id++;
+    lndata->loan_id = max_id;
     lndata->apply_timestp = time(NULL);
     lndata->status = LOAN_PENDING;
     memset(lndata->assignee_emp, 0, UN_LEN);
     write(fd, lndata, sizeof(Loan));
-    // update max_id
-    lseek(fd, 0, SEEK_SET);
-    write(fd, &max_id, sizeof(long));
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
     close(fd);
     return true;
 }
 
-bool loan_assign(long loan_id, const char *eun) {
+typedef enum e_ln_assgn_result {
+    LNASGN_SUCCESS,
+    LNASGN_ALREADYASSGND,
+    LNASGN_NOTFOUND
+} ln_assgn_result;
+
+ln_assgn_result loan_assign(long loan_id, char *eun) {
     int fd = open(LOAN_DB_PATH, O_CREAT | O_RDWR, 0644);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -156,8 +164,15 @@ bool loan_assign(long loan_id, const char *eun) {
     };
     fcntl(fd, F_SETLKW, &lck);
     Loan temp;
+    ln_assgn_result result = LNASGN_NOTFOUND;
+    SKIP_ID;
     while (read(fd, &temp, sizeof(Loan)) > 0) {
         if (loan_id == temp.loan_id) {
+            if (temp.assignee_emp[0] != 0) {
+                result = LNASGN_ALREADYASSGND;
+                strcpy(eun, temp.assignee_emp);
+                break;
+            }
             lck.l_type = F_WRLCK;
             lck.l_whence = SEEK_CUR,
             lck.l_start = lseek(fd, -1 * sizeof(Loan), SEEK_CUR),
@@ -168,13 +183,13 @@ bool loan_assign(long loan_id, const char *eun) {
             lck.l_type = F_UNLCK;
             fcntl(fd, F_SETLK, &lck);
             close(fd);
-            return true;
+            return LNASGN_SUCCESS;
         }
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
     close(fd);
-    return false;
+    return result;
 }
 
 bool loan_accept(long loan_id, float amt, float rate) {
@@ -188,6 +203,7 @@ bool loan_accept(long loan_id, float amt, float rate) {
     };
     fcntl(fd, F_SETLKW, &lck);
     Loan temp;
+    SKIP_ID;
     while (read(fd, &temp, sizeof(Loan)) > 0) {
         if (loan_id == temp.loan_id) {
             lck.l_type = F_WRLCK;
@@ -225,6 +241,7 @@ bool loan_reject(long loan_id, const char *reason) {
     };
     fcntl(fd, F_SETLKW, &lck);
     Loan temp;
+    SKIP_ID;
     while (read(fd, &temp, sizeof(Loan)) > 0) {
         if (loan_id == temp.loan_id) {
             lck.l_type = F_WRLCK;

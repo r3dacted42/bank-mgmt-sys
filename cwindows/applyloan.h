@@ -49,7 +49,9 @@ WINDOW* apply_loan_window(Loan *lndata) {
     mvwprintw(alnwin, fy + 1, fx - 19, "Requested Amount: ");
     mvwprintw(alnwin, fy + dfy + 1, fx - 16, "Annual Income: ");
     wrectangle(alnwin, fy - dfy, fx, fy + fh - dfy, fx + fw);
+    mvwprintw(alnwin, fy + 1, fx + 1, "₹");
     wrectangle(alnwin, fy, fx, fy + fh, fx + fw);
+    mvwprintw(alnwin, fy + dfy + 1, fx + 1, "₹");
     wrectangle(alnwin, fy + dfy, fx, fy + fh + dfy, fx + fw);
     lndata->type = LOAN_PERSONAL;
     mvwprintw(alnwin, fy - dfy + 1, fx + 1, ARROW_LEFT);
@@ -66,8 +68,8 @@ WINDOW* apply_loan_window(Loan *lndata) {
         if (opt == KEY_RIGHT) lndata->type = (loan_type)(lndata->type < LOAN_TYPE_MAX ? lndata->type + 1 : 0);
     }
     keypad(alnwin, FALSE);
-    mvwscanw(alnwin, fy + 1, fx + 1, "%f", &lndata->req_amount);
-    mvwscanw(alnwin, fy + dfy + 1, fx + 1, "%f", &lndata->annual_income);
+    mvwscanw(alnwin, fy + 1, fx + 3, "%f", &lndata->req_amount);
+    mvwscanw(alnwin, fy + dfy + 1, fx + 3, "%f", &lndata->annual_income);
     wclear(alnwin);
     wrefresh(alnwin);
     draw_rounded_border(alnwin, h, w);

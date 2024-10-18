@@ -128,9 +128,9 @@ bool tran_transfer(const char *un, const char *oun, float amt) {
     return true;
 }
 
-// op must be WITHDRAW or LOAN
+// op must be DEPOSIT or LOAN
 bool tran_deposit(const char *un, float amt, tr_operation op) {
-    if (op != WITHDRAW || op != LOAN) return false;
+    if (op != DEPOSIT && op != LOAN) return false;
     int fd = open(CUST_DB_PATH, O_RDWR);
     struct flock lck = {
         .l_type = F_RDLCK,
