@@ -24,7 +24,7 @@ void asln_update_message(WINDOW *aslnwin, const char *msg) {
 }
 
 void asln_display_loans(WINDOW *aslnwin, int sfd, Response res) {
-    int n_appls = res.data.lnassgn;
+    int n_appls = res.data.lncount;
     Loan *loanappls = (Loan*)calloc(n_appls, sizeof(Loan));
     bool *assigned = (bool*)calloc(n_appls, sizeof(bool));
     for (int i = 0; i < n_appls; i++) {
@@ -130,7 +130,7 @@ void asln_display_loans(WINDOW *aslnwin, int sfd, Response res) {
     free(allemps);
 }
 
-WINDOW* assign_loans_window(int sfd) {
+void assign_loans_window(int sfd) {
     int h = LINES - 4, w = COLS - 4;
     WINDOW *aslnwin = newwin(h, w, 2, 2);
     int page_num = 0;

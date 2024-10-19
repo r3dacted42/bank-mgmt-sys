@@ -103,6 +103,7 @@ void customer_menu_window(int sfd, const char *uname) {
                 }
             } else if (highlight_idx == 4) {
                 Request req = { .type = REQLNAPPL };
+                strcpy(req.data.loanappl.applicant_cust, uname);
                 WINDOW *alnwin = apply_loan_window(&req.data.loanappl);
                 write(sfd, &req, sizeof(Request));
                 Response res;

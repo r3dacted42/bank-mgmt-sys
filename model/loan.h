@@ -22,7 +22,7 @@ typedef enum e_employment_status {
 
 typedef enum e_loan_status {
     LOAN_PENDING,
-    LOAN_ACCEPTED,
+    LOAN_APPROVED,
     LOAN_REJECTED
 } loan_status;
 
@@ -46,7 +46,7 @@ typedef struct s_loan {
     loan_status status;
 
     long apply_timestp;
-    long decision_timestp;
+    long review_timestp;
     char rejection_reason[128];
 } Loan;
 

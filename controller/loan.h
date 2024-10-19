@@ -60,14 +60,14 @@ int loan_read_empl(const char *eun, Loan***lndata) {
     Loan tmp;
     SKIP_ID;
     while (read(fd, &tmp, sizeof(Loan)) > 0) {
-        if (strcmp(tmp.assignee_emp, eun) == 0) count++;
+        if (strcmp(tmp.assignee_emp, eun) == 0 && tmp.status == LOAN_PENDING) count++;
     }
     // printf("found %d records!\n", count);
     *lndata = (Loan**)calloc(count + 1, sizeof(Loan*));
     (*lndata)[count] = NULL;
     SKIP_ID;
     for (int index = 0; read(fd, &tmp, sizeof(Loan)) > 0; ) {
-        if (strcmp(tmp.assignee_emp, eun) == 0) {
+        if (strcmp(tmp.assignee_emp, eun) == 0 && tmp.status == LOAN_PENDING) {
             (*lndata)[index] = (Loan*)malloc(sizeof(Loan));
             memcpy((*lndata)[index++], &tmp, sizeof(Loan));
         }
@@ -180,10 +180,8 @@ ln_assgn_result loan_assign(long loan_id, char *eun) {
             fcntl(fd, F_SETLKW, &lck);
             strcpy(temp.assignee_emp, eun);
             write(fd, &temp, sizeof(Loan));
-            lck.l_type = F_UNLCK;
-            fcntl(fd, F_SETLK, &lck);
-            close(fd);
-            return LNASGN_SUCCESS;
+            result = LNASGN_SUCCESS;
+            break;
         }
     }
     lck.l_type = F_UNLCK;
@@ -192,7 +190,13 @@ ln_assgn_result loan_assign(long loan_id, char *eun) {
     return result;
 }
 
-bool loan_accept(long loan_id, float amt, float rate) {
+typedef enum e_ln_rv_result {
+    LNRV_SUCCESS,
+    LNRV_ALREADYRVD,
+    LNRV_NOTFOUND
+} ln_rv_result;
+
+ln_rv_result loan_approve(long loan_id, float amt, float rate) {
     int fd = open(LOAN_DB_PATH, O_CREAT | O_RDWR, 0644);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -203,34 +207,37 @@ bool loan_accept(long loan_id, float amt, float rate) {
     };
     fcntl(fd, F_SETLKW, &lck);
     Loan temp;
+    ln_rv_result result = LNRV_NOTFOUND;
     SKIP_ID;
     while (read(fd, &temp, sizeof(Loan)) > 0) {
         if (loan_id == temp.loan_id) {
+            if (temp.status != LOAN_PENDING) {
+                result = LNRV_ALREADYRVD;
+                break;
+            }
             lck.l_type = F_WRLCK;
             lck.l_whence = SEEK_CUR,
             lck.l_start = lseek(fd, -1 * sizeof(Loan), SEEK_CUR),
             lck.l_len = sizeof(Loan);
             fcntl(fd, F_SETLKW, &lck);
-            temp.status = LOAN_ACCEPTED;
-            temp.decision_timestp = time(NULL);
+            temp.status = LOAN_APPROVED;
+            temp.review_timestp = time(NULL);
             temp.acpt_amount = amt;
             temp.interest_rate = rate;
             write(fd, &temp, sizeof(Loan));
-            lck.l_type = F_UNLCK;
-            fcntl(fd, F_SETLK, &lck);
-            close(fd);
             // creadit amount to customer
             tran_deposit(temp.applicant_cust, temp.acpt_amount, LOAN);
-            return true;
+            result = LNRV_SUCCESS;
+            break;
         }
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
     close(fd);
-    return false;
+    return result;
 }
 
-bool loan_reject(long loan_id, const char *reason) {
+ln_rv_result loan_reject(long loan_id, const char *reason) {
     int fd = open(LOAN_DB_PATH, O_CREAT | O_RDWR, 0644);
     struct flock lck = {
         .l_type = F_RDLCK,
@@ -241,28 +248,30 @@ bool loan_reject(long loan_id, const char *reason) {
     };
     fcntl(fd, F_SETLKW, &lck);
     Loan temp;
+    ln_rv_result result = LNRV_NOTFOUND;
     SKIP_ID;
     while (read(fd, &temp, sizeof(Loan)) > 0) {
         if (loan_id == temp.loan_id) {
+            if (temp.status != LOAN_PENDING) {
+                result = LNRV_ALREADYRVD;
+                break;
+            }
             lck.l_type = F_WRLCK;
             lck.l_whence = SEEK_CUR,
             lck.l_start = lseek(fd, -1 * sizeof(Loan), SEEK_CUR),
             lck.l_len = sizeof(Loan);
             fcntl(fd, F_SETLKW, &lck);
             temp.status = LOAN_REJECTED;
-            temp.decision_timestp = time(NULL);
+            temp.review_timestp = time(NULL);
             memcpy(temp.rejection_reason, reason, 128);
             write(fd, &temp, sizeof(Loan));
-            lck.l_type = F_UNLCK;
-            fcntl(fd, F_SETLK, &lck);
-            close(fd);
-            return true;
+            result = LNRV_SUCCESS;
         }
     }
     lck.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lck);
     close(fd);
-    return false;
+    return result;
 }
 
 #endif // LOAN_CONTROLLER

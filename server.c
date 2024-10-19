@@ -313,7 +313,7 @@ void* service(void *arg) {
                 int count = loan_read_man(&lnlist);
                 if (count > 0) {
                     res.type = RESSUCCESS;
-                    res.data.lnassgn = count;
+                    res.data.lncount = count;
                     bufdata = true;
                     write(cfd, &res, sizeof(Response));
                     for (int i = 0; i < count; i++) {
@@ -348,6 +348,42 @@ void* service(void *arg) {
                 else {
                     res.type = RESBADREQ;
                     if (result == LNASGN_ALREADYASSGND) sprintf(res.data.msg, "Loan application already assigned to %s", req.data.lnassgn.eun);
+                    else sprintf(res.data.msg, "Loan ID not found");
+                }
+            }
+        }
+        if (req.type == REQLNRVGET) {
+            printf("[%d] user %s trying to get loans for review\n", args.num_requests, current_user.uname);
+            if (current_user.role < EMPLOYEE) res.type = RESUNAUTH;
+            else {
+                Loan **lnlist;
+                int count = loan_read_empl(current_user.uname, &lnlist);
+                if (count > 0) {
+                    res.type = RESSUCCESS;
+                    res.data.lncount = count;
+                    bufdata = true;
+                    write(cfd, &res, sizeof(Response));
+                    for (int i = 0; i < count; i++) {
+                        write(cfd, lnlist[i], sizeof(Loan));
+                    }
+                } else res.type = RESEMPTY;
+                loan_free(&lnlist);
+            }
+        }
+        if (req.type == REQLNRVPOST) {
+            printf("[%d] user %s trying to review loan id (%ld)\n", args.num_requests, current_user.uname, req.data.lnrv.loan_id);
+            if (current_user.role < EMPLOYEE) res.type = RESUNAUTH;
+            else {
+                ln_rv_result result;
+                if (req.data.lnrv.status == LOAN_APPROVED) {
+                    result = loan_approve(req.data.lnrv.loan_id, req.data.lnrv.acpt_amt, req.data.lnrv.rate);
+                } else {
+                    result = loan_reject(req.data.lnrv.loan_id, req.data.lnrv.reason);
+                }
+                if (result == LNRV_SUCCESS) res.type = RESSUCCESS;
+                else {
+                    res.type = RESBADREQ;
+                    if (result == LNRV_ALREADYRVD) sprintf(res.data.msg, "Loan application already reviewed");
                     else sprintf(res.data.msg, "Loan ID not found");
                 }
             }

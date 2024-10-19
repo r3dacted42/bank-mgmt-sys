@@ -13,6 +13,7 @@
 #include "../cwindows/enteruname.h"
 #include "../cwindows/editcustomer.h"
 #include "../cwindows/transactionhist.h"
+#include "../cwindows/reviewloans.h"
 
 void employee_menu_window(int sfd, const char *uname) {
     int h = LINES - 2, w = COLS - 2;
@@ -90,7 +91,7 @@ void employee_menu_window(int sfd, const char *uname) {
                 }
                 removewin(eunwin);
             } else if (highlight_idx == 2) {
-                // review loans
+                review_loans_window(sfd);
             } else if (highlight_idx == 3) {
                 char uname[UN_LEN];
                 Request req = { .type = REQGETUSR };
