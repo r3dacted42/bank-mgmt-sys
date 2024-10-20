@@ -101,12 +101,26 @@ void* service(void *arg) {
     read(cfd, &req, sizeof(Request));
     if (!(req.type == REQLOGIN)) {
         res.type = RESBADREQ;
+        sprintf(res.data.msg, "must login before doing anything else!");
         write(cfd, &res, sizeof(Response));
         printf("exiting thread for request #%d\n", args.num_requests);
+        close(cfd);
         return NULL;
     }
     login_res lres = user_login(req.data.login.uname, req.data.login.pw, &current_user);
     if (lres == LGNSUCCESS) {
+        if (current_user.role == CUSTOMER) {
+            Customer temp;
+            cust_read(current_user.uname, &temp);
+            if (temp.state == CACC_INACTIVE) {
+                res.type = RESUNAUTH;
+                sprintf(res.data.msg, "Account inactive, please contact a manager.");
+                write(cfd, &res, sizeof(Response));
+                printf("exiting thread for request #%d\n", args.num_requests);
+                close(cfd);
+                return NULL;
+            }
+        }
         close_user(&current_user);
         mark_user(*args.th, &current_user);
         res.type = RESSUCCESS;
@@ -116,8 +130,11 @@ void* service(void *arg) {
         printf("[%d] user %s logged in\n", args.num_requests, current_user.uname);
     } else {
         res.type = RESUNAUTH;
+        if (lres == LGNWRONGPW) sprintf(res.data.msg, "Wrong password entered!");
+        if (lres == LGNUNAMENOTFOUND) sprintf(res.data.msg, "Username not found!");
         write(cfd, &res, sizeof(Response));
         printf("exiting thread for request #%d\n", args.num_requests);
+        close(cfd);
         return NULL;
     }
     while (1) {

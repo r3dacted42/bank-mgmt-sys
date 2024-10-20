@@ -80,7 +80,9 @@ int main() {
     if (logged_in) {
         crole = res.data.login;
     } else {
-        lw_update_message(lwin, "Login failed! Exiting...");
+        char msg[128];
+        sprintf(msg, "%s Exiting...", res.data.msg);
+        lw_update_message(lwin, msg);
         wgetch(lwin);
         removewin(lwin);
         delwin(win);
