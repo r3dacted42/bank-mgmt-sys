@@ -24,7 +24,7 @@ void rvln_update_message(WINDOW *rvlnwin, const char *msg) {
 }
 
 void rvln_display_loans(WINDOW *rvlnwin, int sfd, Response res) {
-    int n_appls = res.data.lncount;
+    int n_appls = res.data.bufcount;
     Loan *loanappls = (Loan*)calloc(n_appls, sizeof(Loan));
     bool *reviewed = (bool*)calloc(n_appls, sizeof(bool));
     for (int i = 0; i < n_appls; i++) {
@@ -94,7 +94,7 @@ void rvln_display_loans(WINDOW *rvlnwin, int sfd, Response res) {
             int mh = 11, mw = 50;
             int fx = mw / 2 - 5, fw = 25;
             WINDOW *msgwin = newwin(mh, mw, h / 2 - mh / 2, w / 2 - mw / 2);
-            draw_thick_border(msgwin, mh, mw);
+            draw_heavy_border(msgwin, mh, mw);
             if (!reviewed[appl_idx]) {
                 memset(&req, 0, sizeof(Request));
                 req.type = REQLNRVPOST;
@@ -102,10 +102,11 @@ void rvln_display_loans(WINDOW *rvlnwin, int sfd, Response res) {
                 if (decision_idx == 0) {
                     req.data.lnrv.status = LOAN_APPROVED;
                     mvwprintw(msgwin, 3, fx - 17, "Accepted Amount:");
-                    mvwprintw(msgwin, 7, fx - 16, "Interest Rate: ");
+                    mvwprintw(msgwin, 7, fx - 15, "Interest Rate:");
                     wrectangle(msgwin, 2, fx, 4, fx + fw);
                     mvwprintw(msgwin, 3, fx + 1, "₹");
                     wrectangle(msgwin, 6, fx, 8, fx + fw);
+                    mvwprintw(msgwin, 7, fx + fw - 6, "%c P.A.", '%');
                     mvwscanw(msgwin, 3, fx + 3, "%f", &req.data.lnrv.acpt_amt);
                     mvwscanw(msgwin, 7, fx + 1, "%f", &req.data.lnrv.rate);
                 } else {
@@ -117,12 +118,12 @@ void rvln_display_loans(WINDOW *rvlnwin, int sfd, Response res) {
                     int rh =  4, rw = r - l - 1;
                     wrefresh(msgwin);
                     WINDOW *reasonwin = newwin(rh, rw, h / 2 - mh / 2 + 4, w / 2 - mw / 2 + l + 1);
-                    mvwscanw(reasonwin, 0, 0, "%s", req.data.lnrv.reason);
+                    mvwscanw(reasonwin, 0, 0, "%[^\n]", req.data.lnrv.reason);
                     removewin(reasonwin);
                 }
                 wclear(msgwin);
                 wrefresh(msgwin);
-                draw_thick_border(msgwin, mh, mw);
+                draw_heavy_border(msgwin, mh, mw);
                 mvwprintw(msgwin, mh / 2, mw / 2 - 11, "Waiting for server...");
                 write(sfd, &req, sizeof(Request));
                 read(sfd, &res, sizeof(Response));

@@ -313,7 +313,7 @@ void* service(void *arg) {
                 int count = loan_read_man(&lnlist);
                 if (count > 0) {
                     res.type = RESSUCCESS;
-                    res.data.lncount = count;
+                    res.data.bufcount = count;
                     bufdata = true;
                     write(cfd, &res, sizeof(Response));
                     for (int i = 0; i < count; i++) {
@@ -331,7 +331,7 @@ void* service(void *arg) {
                 int count = emp_read_all_no_man(&emlist);
                 if (count > 0) {
                     res.type = RESSUCCESS;
-                    res.data.getallemp = count;
+                    res.data.bufcount = count;
                     bufdata = true;
                     write(cfd, &res, sizeof(Response));
                     for (int i = 0; i < count; i++) write(cfd, emlist[i], sizeof(Employee));
@@ -360,7 +360,7 @@ void* service(void *arg) {
                 int count = loan_read_empl(current_user.uname, &lnlist);
                 if (count > 0) {
                     res.type = RESSUCCESS;
-                    res.data.lncount = count;
+                    res.data.bufcount = count;
                     bufdata = true;
                     write(cfd, &res, sizeof(Response));
                     for (int i = 0; i < count; i++) {
@@ -387,6 +387,41 @@ void* service(void *arg) {
                     else sprintf(res.data.msg, "Loan ID not found");
                 }
             }
+        }
+        if (req.type == REQLNCUSTGET) {
+            printf("[%d] user %s trying to get applied loans\n", args.num_requests, current_user.uname);
+            Loan **lnlist;
+            int count = loan_read_cust(current_user.uname, &lnlist);
+            if (count > 0) {
+                res.type = RESSUCCESS;
+                res.data.bufcount = count;
+                bufdata = true;
+                write(cfd, &res, sizeof(Response));
+                for (int i = 0; i < count; i++) {
+                    write(cfd, lnlist[i], sizeof(Loan));
+                }
+            } else res.type = RESEMPTY;
+            loan_free(&lnlist);
+        }
+        if (req.type == REQADDFDBK) {
+            printf("[%d] user %s trying to submite feedback\n", args.num_requests, current_user.uname);
+            feedback_create(req.data.fdbk.cat, req.data.fdbk.text);
+            res.type = RESSUCCESS;
+        }
+        if (req.type == REQGETFDBK) {
+            printf("[%d] user %s trying to get feedbacks\n", args.num_requests, current_user.uname);
+            Feedback **fdbklist;
+            int count = feedback_read(&fdbklist);
+            if (count > 0) {
+                res.type = RESSUCCESS;
+                res.data.bufcount = count;
+                bufdata = true;
+                write(cfd, &res, sizeof(Response));
+                for (int i = 0; i < count; i++) {
+                    write(cfd, fdbklist[i], sizeof(Feedback));
+                }
+            } else res.type = RESEMPTY;
+            feedback_free(&fdbklist);
         }
         if (!bufdata) write(cfd, &res, sizeof(Response));
         memset(&res, 0, sizeof(Response));

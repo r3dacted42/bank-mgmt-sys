@@ -32,8 +32,7 @@ typedef union u_res_data
     user_role getusrrole;
     float getbal;
     tran_list viewtran;
-    int lncount; // number of loans appls to read
-    int getallemp;
+    int bufcount; // number of objects to read
     char msg[64]; // error message
 } res_data;
 

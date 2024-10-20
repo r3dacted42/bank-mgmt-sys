@@ -13,6 +13,8 @@
 #include "../cwindows/enteruname.h"
 #include "../cwindows/transactionhist.h"
 #include "../cwindows/applyloan.h"
+#include "../cwindows/viewloans.h"
+#include "../cwindows/addfeedback.h"
 
 void view_balance(int sfd) {
     Request req = { .type = REQGETBAL };
@@ -116,11 +118,19 @@ void customer_menu_window(int sfd, const char *uname) {
                 wgetch(alnwin);
                 removewin(alnwin);
             } else if (highlight_idx == 5) {
-                // view loan applications
+                view_loans_window(sfd);
             } else if (highlight_idx == 6) {
                 transaction_history_window(sfd, "");
             } else if (highlight_idx == 7) {
-                // feedback
+                Request req = { .type = REQADDFDBK };
+                WINDOW *afdbkwin = add_feedback_window(&req.data.fdbk.cat, req.data.fdbk.text);
+                write(sfd, &req, sizeof(Request));
+                Response res;
+                read(sfd, &res, sizeof(Response));
+                if (res.type == RESSUCCESS) afdbk_update_message(afdbkwin, "Feedback added successfully!");
+                else afdbk_update_message(afdbkwin, "Failed to add feedback!");
+                wgetch(afdbkwin);
+                removewin(afdbkwin);
             } else if (highlight_idx == 8) {
                 Request req = { .type = REQCHPW };
                 WINDOW *chpwin = change_passwd_window(req.data.chpw.oldpw, req.data.chpw.newpw);

@@ -13,6 +13,7 @@
 #include "../cwindows/enteruname.h"
 #include "../cwindows/viewedituser.h"
 #include "../cwindows/assignloans.h"
+#include "../cwindows/reviewfeedback.h"
 
 void manager_menu_window(int sfd, const char *uname) {
     int h = LINES - 2, w = COLS - 2;
@@ -40,7 +41,7 @@ void manager_menu_window(int sfd, const char *uname) {
             } else if (highlight_idx == 1) {
                 assign_loans_window(sfd);
             } else if (highlight_idx == 2) {
-                // review feedback
+                review_feedback_window(sfd);
             } else if (highlight_idx == 3) {
                 Request req = { .type = REQCHPW };
                 WINDOW *chpwin = change_passwd_window(req.data.chpw.oldpw, req.data.chpw.newpw);

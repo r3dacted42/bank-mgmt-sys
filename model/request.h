@@ -4,6 +4,7 @@
 #include "user.h"
 #include "../controller/customer.h"
 #include "../controller/loan.h"
+#include "../controller/feedback.h"
 
 typedef enum e_req_type {
     REQLOGIN,
@@ -20,11 +21,14 @@ typedef enum e_req_type {
     REQLNAPPL,
     REQLNASSGNPOST,
     REQLNRVPOST,
+    REQADDFDBK,
     // need no data
     REQGETBAL,
     REQLNASSGNGET,
     REQLNRVGET,
+    REQLNCUSTGET,
     REQGETEMPS,
+    REQGETFDBK,
     REQLOGOUT
 } req_type;
 
@@ -83,6 +87,11 @@ typedef struct s_ln_rv_post_data {
     char reason[128];
 } ln_rv_post_data;
 
+typedef struct s_add_fdbk_data {
+    feedback_category cat;
+    char text[FDBK_TEXT_LEN];
+} add_fdbk_data;
+
 typedef union u_req_data
 {
     req_login_data login; // REQLOGIN
@@ -97,6 +106,7 @@ typedef union u_req_data
     Loan loanappl; // REQLNAPPL
     ln_assgn_post_data lnassgn; // REQLNASSGNPOST
     ln_rv_post_data lnrv; // REQLNRVPOST
+    add_fdbk_data fdbk; // REQADDFDBK
 } req_data;
 
 typedef struct s_request {

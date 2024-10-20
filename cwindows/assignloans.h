@@ -24,7 +24,7 @@ void asln_update_message(WINDOW *aslnwin, const char *msg) {
 }
 
 void asln_display_loans(WINDOW *aslnwin, int sfd, Response res) {
-    int n_appls = res.data.lncount;
+    int n_appls = res.data.bufcount;
     Loan *loanappls = (Loan*)calloc(n_appls, sizeof(Loan));
     bool *assigned = (bool*)calloc(n_appls, sizeof(bool));
     for (int i = 0; i < n_appls; i++) {
@@ -49,7 +49,7 @@ void asln_display_loans(WINDOW *aslnwin, int sfd, Response res) {
         wgetch(aslnwin);
         return;
     }
-    int n_emps = res.data.getallemp;
+    int n_emps = res.data.bufcount;
     Employee *allemps = (Employee*)calloc(n_emps, sizeof(Employee));
     for (int i = 0; i < n_emps; i++) read(sfd, &allemps[i], sizeof(Employee));
     int h = LINES - 4, w = COLS - 4;
