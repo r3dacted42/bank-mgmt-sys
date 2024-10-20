@@ -8,7 +8,7 @@
 #include "../utilities/shapes.h"
 
 #define ENTER_UNAME_H 7
-#define ENTER_UNAME_W 42
+#define ENTER_UNAME_W 55
 
 void eun_update_message(WINDOW *eunwin, const char *msg) {
     int h = ENTER_UNAME_H, w = ENTER_UNAME_W;

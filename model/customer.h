@@ -4,8 +4,8 @@
 #include "common.h"
 
 typedef enum e_acc_state {
-    INACTIVE,
-    ACTIVE
+    CACC_INACTIVE,
+    CACC_ACTIVE
 } acc_state;
 
 typedef struct s_customer {

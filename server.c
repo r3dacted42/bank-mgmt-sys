@@ -145,7 +145,7 @@ void* service(void *arg) {
                         if (req.data.ureg.role == CUSTOMER) {
                             Customer cust = {
                                 .balance = 0,
-                                .state = INACTIVE,
+                                .state = CACC_INACTIVE,
                                 .pers_info = req.data.ureg.info
                             };
                             strcpy(cust.uname, req.data.ureg.uname);
@@ -195,7 +195,6 @@ void* service(void *arg) {
             printf("[%d] user %s trying to update (%s)\n", args.num_requests, current_user.uname, req.data.uupdt.uname);
             printf("un:%s nun:%s pw:%s rl:%d | fn:%s ln:%s\n", req.data.uupdt.uname, req.data.uupdt.nuname, req.data.uupdt.pw, 
             req.data.uupdt.role, req.data.uupdt.info.first_name, req.data.uupdt.info.last_name);
-            getchar();
             User utemp;
             if (!user_read(req.data.uupdt.uname, &utemp)) res.type = RESBADREQ;
             else if (current_user.role < utemp.role) {
@@ -222,7 +221,7 @@ void* service(void *arg) {
                         Customer cu = {
                             .balance = 0,
                             .pers_info = req.data.uupdt.info,
-                            .state = INACTIVE
+                            .state = CACC_INACTIVE
                         };
                         if (uopt & UPDT_UNAME) strcpy(cu.uname, req.data.uupdt.nuname);
                         else strcpy(cu.uname, utemp.uname);

@@ -35,9 +35,52 @@ void manager_menu_window(int sfd, const char *uname) {
         wrefresh(mwin);
         int opt = wgetch(mwin);
         if (opt == KEY_ENTER || opt == '\n' || opt == '\r') {
-            // mvwprintw(mwin, 1, 1, "%d", highlight_idx);
             if (highlight_idx == 0) {
-                // act/deact cust
+                Request req = { .type = REQGETUSR };
+                WINDOW *eunwin = enter_uname_window(req.data.getusr);
+                write(sfd, &req, sizeof(Request));
+                Response res; 
+                read(sfd, &res, sizeof(Response));
+                if (res.type != RESSUCCESS) {
+                    eun_update_message(eunwin, "User not found!");
+                    wgetch(eunwin);
+                } else if (res.data.getusr.role != CUSTOMER) {
+                    eun_update_message(eunwin, "User is not a customer!");
+                    wgetch(eunwin);
+                } else {
+                    if (res.data.getusr.cust_state == CACC_INACTIVE) {
+                        eun_update_message(eunwin, "Customer account is inactive, activate it? [y/n]");
+                    } else {
+                        eun_update_message(eunwin, "Customer account is active, deactivate it? [y/n]");
+                    }
+                    int opt = wgetch(eunwin);
+                    if (opt == 'y' || opt == 'Y') {
+                        eun_update_message(eunwin, "Updating customer account state...");
+                        char cuname[UN_LEN];
+                        strcpy(cuname, req.data.getusr);
+                        memset(&req, 0, sizeof(Request));
+                        req.type = REQUPDTUSR;
+                        strcpy(req.data.uupdt.uname, cuname);
+                        strcpy(req.data.uupdt.nuname, cuname);
+                        memcpy(&req.data.uupdt.role, &res.data.getusr.role, 
+                        sizeof(user_role) + sizeof(PersonalInfo) + sizeof(acc_state) + sizeof(long));
+                        if (req.data.uupdt.cust_state == CACC_ACTIVE) {
+                            req.data.uupdt.cust_state = CACC_INACTIVE;
+                        } else {
+                            req.data.uupdt.cust_state = CACC_ACTIVE;
+                        }
+                        write(sfd, &req, sizeof(Request));
+                        read(sfd, &res, sizeof(Response));
+                        if (res.type == RESSUCCESS) {
+                            eun_update_message(eunwin, "Successfully updated account state!");
+                        } else {
+                            eun_update_message(eunwin, "Failed to update account state!");
+                        }
+                        wgetch(eunwin);
+                    }
+                }
+                removewin(eunwin);
+                echo();
             } else if (highlight_idx == 1) {
                 assign_loans_window(sfd);
             } else if (highlight_idx == 2) {
