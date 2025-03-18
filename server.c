@@ -21,7 +21,7 @@
 #include "controller/loan.h"
 
 #define PORT 5003
-#define MAX_ACTIVE_USERS 500
+#define MAX_ACTIVE_USERS 512
 
 void close_sock(int);
 int sfd;
