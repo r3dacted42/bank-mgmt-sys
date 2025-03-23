@@ -56,4 +56,4 @@ the number of objects to be read from the socket is sent in the response under t
 - unions are used in the Request and Response structs to store the required data before being sent
 
 ## class diagram
-![class_diagram.png](https://github.com/r3dacted42/bank-mgmt-sys/blob/master/class_diagram.png)
+![class_diagram.png](https://github.com/r3dacted42/bank-mgmt-sys/blob/master/class_diagram.png?raw=true)
