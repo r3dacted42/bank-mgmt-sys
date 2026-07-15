@@ -21,19 +21,19 @@
 #include "controller/loan.h"
 
 #define PORT 5003
-#define MAX_ACTIVE_USERS 512
 
 void close_sock(int);
+long max_clients;
 int sfd;
 int num_active_users = 0;
 typedef struct s_active_user {
     pthread_t th;
     User *udata;
 } active_user;
-active_user *active_users[MAX_ACTIVE_USERS] = {0};
+active_user **active_users = NULL;
 
 void mark_user(pthread_t th, User *user) {
-    for (int i = 0; i < MAX_ACTIVE_USERS; i++) {
+    for (int i = 0; i < max_clients; i++) {
         if (active_users[i] == NULL) {
             active_users[i] = malloc(sizeof(active_user));
             active_users[i]->th = th;
@@ -44,7 +44,7 @@ void mark_user(pthread_t th, User *user) {
 }
 
 void unmark_user(User *user) {
-    for (int i = 0; i < MAX_ACTIVE_USERS; i++) {
+    for (int i = 0; i < max_clients; i++) {
         if (active_users[i] != NULL && strcmp(active_users[i]->udata->uname, user->uname) == 0) {
             free(active_users[i]);
             active_users[i] = NULL;
@@ -53,7 +53,7 @@ void unmark_user(User *user) {
 }
 
 void close_user(User *user) {
-    for (int i = 0; i < MAX_ACTIVE_USERS; i++) {
+    for (int i = 0; i < max_clients; i++) {
         if (active_users[i] != NULL && strcmp(active_users[i]->udata->uname, user->uname) == 0) {
             printf("closing existing session for user %s...\n", active_users[i]->udata->uname);
             pthread_cancel(active_users[i]->th);
@@ -449,6 +449,15 @@ void* service(void *arg) {
 }
 
 int main() {
+    const long max_connections = sysconf(_SC_OPEN_MAX);
+    max_clients = max_connections - 10;
+    const size_t clients_size = sizeof(active_user*) * max_clients;
+    active_users = malloc(clients_size);
+    if (active_users == NULL) {
+        perror("failed to allocate memory for client tracking");
+        exit(EXIT_FAILURE);
+    }
+    memset(active_users, 0, clients_size);
     int num_users = get_user_count();
     if (num_users <= 0) {
         printf("please create an admin account to continue:\nenter the username: ");
