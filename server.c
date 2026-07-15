@@ -494,7 +494,7 @@ int main() {
         perror("failed at bind"); 
         close_sock(0);
     }
-    if (listen(sfd, 5) < 0) { 
+    if (listen(sfd, SOMAXCONN) < 0) { 
         perror("failed at listen"); 
         close_sock(0); 
     }
