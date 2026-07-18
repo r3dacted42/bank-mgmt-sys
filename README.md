@@ -32,10 +32,48 @@ the following user phases are supported:
 
 aside from the above, all users can their change password as well
 
+## screenshots
+
+<figure>
+<figcaption>user login page</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/login.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>admin main menu</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/admin-main.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>single session (auto-cancel old session's thread)</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/single-session.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>customer accounts inactive by default</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/inactive-acct.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>manager main menu</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/manager-main.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>customer account activation/deactivation</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/activate-acct.png?raw=true">
+</figure>
+
+<figure>
+<figcaption>customer main menu</figcaption>
+<img src="https://github.com/r3dacted42/bank-mgmt-sys/blob/master/screenshots/customer-main.png?raw=true">
+</figure>
+
 ## todo
 - delete all user related records on user deletion
 - delete all irrelevant records on user role change
 - add docstrings for important functions xP
+- add the rest of the screenshots???
 
 ## known issues
 - updating customer info from employee phase causes crash
